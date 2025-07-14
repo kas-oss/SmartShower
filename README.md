@@ -1,7 +1,3 @@
-Claro! Aqui vai um exemplo de **README.md** para seu projeto **Smart Shower**:
-
----
-
 # 🚿 Smart Shower - Medidor Inteligente de Consumo de Água
 
 **Smart Shower** é um projeto de Arduino que visa incentivar o consumo consciente de água durante o banho, exibindo em tempo real a quantidade de água utilizada, tempo de banho, frases motivacionais e dicas de economia. O sistema possui gamificação (recorde pessoal), menu de navegação e pode ser usado em feiras de ciências, escolas ou até mesmo no dia a dia em casa!
@@ -54,10 +50,30 @@ Claro! Aqui vai um exemplo de **README.md** para seu projeto **Smart Shower**:
 [Botão Down] -------> Pino 4  
 [Botão Up] ---------> Pino 5  
 [Botão Select] -----> Pino 6  
-[LCD I2C] ----------> SDA/SCL  
+[LCD I2C] ----------> SDA/SCL
 ```
 
 > Os botões devem ser ligados entre o pino e o GND (utilizando INPUT\_PULLUP no código).
+
+## 🖼️ Diagrama de Montagem
+
+```mermaid
+graph LR
+    subgraph Arduino
+        A2[Pino 2]
+        A3[Pino 3]
+        A4[Pino 4]
+        A5[Pino 5]
+        A6[Pino 6]
+        I2C[SDA/SCL]
+    end
+    Sensor[Sensor de Fluxo YF-S201] --> A2
+    Buzzer[Buzzer] --> A3
+    Down[Botão Down] --> A4
+    Up[Botão Up] --> A5
+    Select[Botão Select] --> A6
+    LCD[LCD I2C] --> I2C
+```
 
 ## 🚦 Como Usar
 
@@ -81,6 +97,15 @@ Claro! Aqui vai um exemplo de **README.md** para seu projeto **Smart Shower**:
 ## 🤝 Contribua!
 
 Pull requests são bem-vindos! Sinta-se à vontade para sugerir melhorias ou abrir issues.
+
+### Como Contribuir
+
+1. Faça um **fork** deste repositório.
+2. Crie uma **branch** para sua modificação: `git checkout -b minha-feature`.
+3. Realize suas alterações e faça *commits* claros.
+4. Envie a branch para o seu fork: `git push origin minha-feature`.
+5. Abra um **Pull Request** descrevendo suas mudanças.
+6. Acompanhe a revisão e responda às sugestões.
 
 ## 📜 Licença
 
