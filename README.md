@@ -84,7 +84,7 @@ Pull requests são bem-vindos! Sinta-se à vontade para sugerir melhorias ou abr
 
 ## 📜 Licença
 
-MIT License
+Este projeto está licenciado sob a [MIT License](LICENSE).
 
 ---
 
