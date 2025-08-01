@@ -26,10 +26,8 @@ int menuOpcao = 0; // 0=Temporizador, 1=Contador, 2=Dicas
 int tempoDefinido = 5;
 bool contando = false;       // Flag principal para controlar contagens
 bool banhoConcluido = false;
-// bool contadorIniciado = false; // <-- REMOVA ESTA LINHA
 
 // --- FRASES E DICAS (EM PROGMEM) ---
-// (O seu código PROGMEM continua aqui, sem alterações)
 const char frase0[] PROGMEM = "Cada gota conta!";
 const char frase1[] PROGMEM = "Parabens pela economia!";
 const char frase2[] PROGMEM = "Banho rapido, planeta feliz!";
@@ -186,7 +184,7 @@ void mostrarMenu() {
     if (menuOpcao == 0) estado = AJUSTA_TIMER;
     else if (menuOpcao == 1) estado = CONTADOR;
     else estado = DICA;
-    contando = false; // <-- Esta linha já garante o reinício correto!
+    contando = false;
     lcd.clear();
     delay(200);
   }
@@ -278,13 +276,12 @@ void rodarTemporizador() {
 }
 
 void rodarContador() {
-  // Variáveis estáticas mantêm seus valores entre as chamadas da função.
   static unsigned long tempoInicioContador = 0;
-  static unsigned long ultimoTempoExibido = 9999; // Para controlar a atualização do display.
+  static unsigned long ultimoTempoExibido = 9999;
 
   // --- Bloco de Inicialização (Executa apenas uma vez) ---
   if (!contando) {
-    contando = true; // Marca que a contagem começou.
+    contando = true; 
 
     // Mostra as estatísticas iniciais
     char buffer[40];
@@ -295,7 +292,7 @@ void rodarContador() {
     char recLinha[17];
     snprintf(recLinha, 17, "Recorde: %s L", recStr);
     printComEspacos(recLinha, 0);
-    delay(1400); // Pausa para o usuário ler
+    delay(1400);
     lcd.clear();
 
     // Zera os contadores para a nova sessão
@@ -307,13 +304,9 @@ void rodarContador() {
   // --- Bloco de Atualização Contínua ---
   unsigned long tempoDecorrido = (millis() - tempoInicioContador) / 1000;
 
-  // A MÁGICA ACONTECE AQUI:
-  // Só executa o código de exibição se o segundo atual for diferente do último mostrado.
   if (tempoDecorrido != ultimoTempoExibido) {
-    
-    ultimoTempoExibido = tempoDecorrido; // Atualiza o controle com o novo segundo.
-
-    char buffer[17]; // Buffer para a linha 0
+    ultimoTempoExibido = tempoDecorrido; 
+    char buffer[17]; 
     snprintf(buffer, 17, "Tempo: %2lu:%02lu", tempoDecorrido / 60, tempoDecorrido % 60);
 
     float litrosAgora = calcularLitros();
