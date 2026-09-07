@@ -2,7 +2,8 @@
 #include <Arduino.h>
 #include <WiFiS3.h>
 #include "ShowerSession.h"
-#include "WebApp.h"
+#include "WebPublic.h"
+#include "WebAdmin.h"
 
 class WebServerAPI {
 private:
@@ -257,12 +258,23 @@ public:
       client.print(resp);
     }
     else if (requestLine.startsWith("GET / ") || requestLine.startsWith("GET /index.html")) {
-      enviarCabecalho(client, "200 OK", "text/html; charset=utf-8", strlen(WEB_APP));
-      size_t total = strlen(WEB_APP);
+      enviarCabecalho(client, "200 OK", "text/html; charset=utf-8", strlen(WEB_PUBLIC_HTML));
+      size_t total = strlen(WEB_PUBLIC_HTML);
       size_t enviado = 0;
       while (enviado < total && client.connected()) {
         size_t bloco = (total - enviado < 1024) ? (total - enviado) : 1024;
-        client.write((const uint8_t*)(WEB_APP + enviado), bloco);
+        client.write((const uint8_t*)(WEB_PUBLIC_HTML + enviado), bloco);
+        enviado += bloco;
+        delay(1);
+      }
+    }
+    else if (requestLine.startsWith("GET /admin")) {
+      enviarCabecalho(client, "200 OK", "text/html; charset=utf-8", strlen(WEB_ADMIN_APP));
+      size_t total = strlen(WEB_ADMIN_APP);
+      size_t enviado = 0;
+      while (enviado < total && client.connected()) {
+        size_t bloco = (total - enviado < 1024) ? (total - enviado) : 1024;
+        client.write((const uint8_t*)(WEB_ADMIN_APP + enviado), bloco);
         enviado += bloco;
         delay(1);
       }

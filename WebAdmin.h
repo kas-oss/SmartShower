@@ -1,9 +1,9 @@
 #pragma once
 #include <Arduino.h>
 
-// Web App 100% autônomo (HTML, CSS e JS modernos embutidos)
+// Web App 100% autonomo (HTML, CSS e JS modernos embutidos)
 // Funciona offline diretamente conectado ao Wi-Fi do Arduino.
-const char WEB_APP[] = R"rawliteral(<!doctype html>
+const char WEB_ADMIN_APP[] = R"rawliteral(<!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -164,7 +164,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .result-box.show{display:block}
 .result-score{font-size:28px;font-weight:900;color:var(--ok);margin-bottom:4px}
 .result-details{font-size:13px;color:var(--muted)}
-/* Calibração */
+/* Calibracao */
 .calib-box{
   background:var(--card-inner);border:1px solid var(--border);border-radius:14px;
   padding:16px;margin-top:12px;
@@ -180,7 +180,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
   border-radius:12px;padding:12px;margin-top:12px;text-align:center;display:none;
 }
 .calib-result.show{display:block}
-/* Concessionárias & Fatura */
+/* Concessionarias & Fatura */
 .select-styled{
   width:100%;height:42px;background:var(--card-inner);border:1px solid var(--border);
   border-radius:10px;color:var(--text);font-size:13px;font-weight:700;padding:0 10px;outline:none;
@@ -226,17 +226,41 @@ button:disabled{opacity:.4;cursor:not-allowed}
 </style>
 </head>
 <body>
-<div class="app-container">
-  <header>
-    <div class="brand">🚿 SmartShower <span>2.0</span></div>
-    <div id="statusBadge" class="badge">● Conectando</div>
+<div id="loginOverlay" style="position:fixed;inset:0;background:#071822;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;">
+  <div class="card" style="max-width:380px;width:100%;box-shadow:0 12px 36px rgba(0,0,0,.5);border:1px solid rgba(56,189,248,.3);text-align:center;">
+    <div style="font-size:32px;margin-bottom:8px">&#128274;</div>
+    <div style="font-size:18px;font-weight:800;color:#f0f6fc;margin-bottom:4px">Painel Administrativo</div>
+    <div style="font-size:12px;color:#8b9eb3;margin-bottom:18px">Acesso restrito para controle e testes do SmartShower</div>
+    <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" style="display:grid;gap:12px">
+      <div style="text-align:left">
+        <label style="font-size:11px;color:#8b9eb3;font-weight:700;display:block;margin-bottom:4px">Usu&aacute;rio:</label>
+        <input type="text" id="adminUser" class="stepper-input" style="height:42px;width:100%;text-align:left;font-size:14px" placeholder="smartshower" required autocomplete="username">
+      </div>
+      <div style="text-align:left">
+        <label style="font-size:11px;color:#8b9eb3;font-weight:700;display:block;margin-bottom:4px">Senha de Acesso:</label>
+        <input type="password" id="adminPass" class="stepper-input" style="height:42px;width:100%;text-align:left;font-size:14px" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required autocomplete="current-password">
+      </div>
+      <div id="loginErrMsg" style="font-size:12px;color:#f87171;display:none;font-weight:700">Credenciais incorretas. Tente novamente.</div>
+      <button type="submit" class="action btn-primary" style="margin-top:6px;width:100%">Desbloquear Painel</button>
+      <a href="/" style="font-size:12px;color:#38bdf8;text-decoration:none;margin-top:4px">&larr; Voltar &agrave; Apresenta&ccedil;&atilde;o Cient&iacute;fica</a>
+    </form>
+  </div>
+</div>
+
+<div class="app-container" id="adminMainContainer" style="display:none">
+    <header>
+    <div class="brand">&#128703; SmartShower <span>Admin</span></div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <a href="/" class="badge" style="text-decoration:none;background:rgba(56,189,248,.15);color:var(--accent);border-color:rgba(56,189,248,.3)">&#128214; Apresenta&ccedil;&atilde;o</a>
+      <button onclick="adminLogout()" class="badge" style="background:rgba(248,113,113,.15);color:var(--danger);border-color:rgba(248,113,113,.3);cursor:pointer">&#128682; Sair</button>
+    </div>
   </header>
 
   <nav class="nav-tabs">
-    <button class="nav-btn active" onclick="switchTab('tabLive', this)">🚿 Banho</button>
-    <button class="nav-btn" onclick="switchTab('tabHistory', this)">📊 Histórico</button>
-    <button class="nav-btn" onclick="switchTab('tabBilling', this)">💰 Fatura</button>
-    <button class="nav-btn" onclick="switchTab('tabConfig', this)">⚙️ Ajustes</button>
+    <button class="nav-btn active" onclick="switchTab('tabLive', this)">&#128703; Banho</button>
+    <button class="nav-btn" onclick="switchTab('tabHistory', this)">&#128202; Hist&oacute;rico</button>
+    <button class="nav-btn" onclick="switchTab('tabBilling', this)">&#128176; Fatura</button>
+    <button class="nav-btn" onclick="switchTab('tabConfig', this)">&#9881;&#65039; Ajustes</button>
   </nav>
 
   <!-- ABA 1: BANHO AO VIVO & CONTROLE -->
@@ -257,29 +281,29 @@ button:disabled{opacity:.4;cursor:not-allowed}
 
     <section class="metrics-grid">
       <div class="metric-box">
-        <small>⏱️ Tempo</small>
+        <small>&#9201;&#65039; Tempo</small>
         <strong id="liveTime">00:00</strong>
       </div>
       <div class="metric-box">
-        <small>💧 Vazão</small>
+        <small>&#128167; Vaz&atilde;o</small>
         <strong id="liveFlow">0.0 <span style="font-size:11px;font-weight:normal">L/m</span></strong>
       </div>
       <div class="metric-box">
-        <small>💰 Custo</small>
+        <small>&#128176; Custo</small>
         <strong id="liveCost">R$ 0,00</strong>
       </div>
     </section>
 
     <section class="card">
-      <div class="section-title">Configurar & Iniciar</div>
+      <div class="section-title">Configurar &amp; Iniciar</div>
       
       <div class="mode-selector">
-        <button id="btnModeTimer" class="mode-btn active" onclick="selectMode('timer')">⏱️ Tempo</button>
-        <button id="btnModeLiters" class="mode-btn" onclick="selectMode('liters')">💧 Litros</button>
-        <button id="btnModeFree" class="mode-btn" onclick="selectMode('free')">♾️ Livre</button>
+        <button id="btnModeTimer" class="mode-btn active" onclick="selectMode('timer')">&#9201;&#65039; Tempo</button>
+        <button id="btnModeLiters" class="mode-btn" onclick="selectMode('liters')">&#128167; Litros</button>
+        <button id="btnModeFree" class="mode-btn" onclick="selectMode('free')">&#8734; Livre</button>
       </div>
 
-      <!-- SELEÇÃO DE TEMPO CUSTOMIZADO -->
+      <!-- SELE&Ccedil;&Atilde;O DE TEMPO CUSTOMIZADO -->
       <div id="boxTimer">
         <div class="chip-group">
           <div class="chip" onclick="setTimerMin(1)">1 min</div>
@@ -291,14 +315,14 @@ button:disabled{opacity:.4;cursor:not-allowed}
           <div class="chip" onclick="setTimerMin(15)">15 min</div>
         </div>
         <div class="stepper-row">
-          <button type="button" class="stepper-btn" onclick="stepTimer(-1)">−</button>
+          <button type="button" class="stepper-btn" onclick="stepTimer(-1)">&minus;</button>
           <input type="number" id="inpMinutes" class="stepper-input" value="5" min="1" max="60" oninput="onCustomMinutes()">
           <span class="stepper-unit">min</span>
           <button type="button" class="stepper-btn" onclick="stepTimer(1)">+</button>
         </div>
       </div>
 
-      <!-- SELEÇÃO DE LITROS CUSTOMIZADOS -->
+      <!-- SELE&Ccedil;&Atilde;O DE LITROS CUSTOMIZADOS -->
       <div id="boxLiters" style="display:none">
         <div class="chip-group">
           <div class="chip" onclick="setLitersVal(10)">10 L</div>
@@ -309,7 +333,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
           <div class="chip" onclick="setLitersVal(50)">50 L</div>
         </div>
         <div class="stepper-row">
-          <button type="button" class="stepper-btn" onclick="stepLiters(-5)">−</button>
+          <button type="button" class="stepper-btn" onclick="stepLiters(-5)">&minus;</button>
           <input type="number" id="inpLiters" class="stepper-input" value="30" min="1" max="300" oninput="onCustomLiters()">
           <span class="stepper-unit">L</span>
           <button type="button" class="stepper-btn" onclick="stepLiters(5)">+</button>
@@ -317,14 +341,14 @@ button:disabled{opacity:.4;cursor:not-allowed}
       </div>
 
       <div class="btn-grid" style="margin-top:14px">
-        <button id="btnStart" class="action btn-start" onclick="startShower()">▶ INICIAR BANHO</button>
-        <button id="btnPause" class="action btn-pause" onclick="togglePause()" style="display:none">🧼 MODO ENSABOAR</button>
-        <button id="btnStop" class="action btn-stop" onclick="stopShower()" style="display:none">⏹ FINALIZAR BANHO</button>
+        <button id="btnStart" class="action btn-start" onclick="startShower()">&#9654; INICIAR BANHO</button>
+        <button id="btnPause" class="action btn-pause" onclick="togglePause()" style="display:none">&#129532; MODO ENSABOAR</button>
+        <button id="btnStop" class="action btn-stop" onclick="stopShower()" style="display:none">&#9209; FINALIZAR BANHO</button>
       </div>
     </section>
   </main>
 
-  <!-- ABA 2: HISTÓRICO -->
+  <!-- ABA 2: HIST&Oacute;RICO -->
   <section id="tabHistory" class="tab-content">
     <div class="card">
       <div class="section-title">Resumo Geral</div>
@@ -338,7 +362,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
           <strong id="histRecord">0.0 L</strong>
         </div>
         <div class="metric-box">
-          <small>Meta Média</small>
+          <small>Meta M&eacute;dia</small>
           <strong><span id="histAvg">--</span></strong>
         </div>
       </div>
@@ -346,7 +370,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 
     <div class="card">
       <div class="section-title" style="display:flex;justify-content:space-between">
-        <span>Últimos Banhos</span>
+        <span>&Uacute;ltimos Banhos</span>
         <button onclick="fetchHistory()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer">Atualizar</button>
       </div>
       <div id="historyList">
@@ -355,48 +379,48 @@ button:disabled{opacity:.4;cursor:not-allowed}
     </div>
   </section>
 
-  <!-- ABA 3: FATURA & CONCESSIONÁRIA (EMBASA) -->
+  <!-- ABA 3: FATURA &amp; CONCESSION&Aacute;RIA (EMBASA) -->
   <section id="tabBilling" class="tab-content">
     
-    <!-- CARD: SELEÇÃO DA CONCESSIONÁRIA & ESGOTO -->
+    <!-- CARD: SELE&Ccedil;&Atilde;O DA CONCESSION&Aacute;RIA &amp; ESGOTO -->
     <div class="card">
       <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
-        <span>Concessionária de Água</span>
+        <span>Concession&aacute;ria de &Aacute;gua</span>
         <button type="button" class="btn-secondary" style="height:26px;padding:0 8px;font-size:11px;border-radius:6px" onclick="toggleCustomCompanyForm()">+ Personalizada</button>
       </div>
 
       <div style="margin-bottom:12px">
-        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600">Empresa / Concessionária Ativa:</label>
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600">Empresa / Concession&aacute;ria Ativa:</label>
         <select id="selConcessionaire" class="select-styled" onchange="onCompanySelectChange()">
           <!-- Preenchido dinamicamente via JavaScript -->
         </select>
         <div id="companyDesc" style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.3"></div>
       </div>
 
-      <!-- FORMULÁRIO DE CONCESSIONÁRIA PERSONALIZADA (EXPANSÍVEL) -->
+      <!-- FORMUL&Aacute;RIO DE CONCESSION&Aacute;RIA PERSONALIZADA (EXPANS&Iacute;VEL) -->
       <div id="boxCustomCompany" class="sub-panel" style="display:none">
-        <div style="font-size:13px;font-weight:800;color:var(--accent);margin-bottom:10px">➕ Cadastrar Concessionária Personalizada</div>
+        <div style="font-size:13px;font-weight:800;color:var(--accent);margin-bottom:10px">&#10133; Cadastrar Concession&aacute;ria Personalizada</div>
         <div style="margin-bottom:8px">
-          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Nome da Concessionária:</label>
+          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Nome da Concession&aacute;ria:</label>
           <input type="text" id="custCompName" class="stepper-input" style="height:36px;text-align:left;font-size:13px;width:100%" placeholder="Ex: SAAEB / Sabesp / Copasa">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Consumo Mínimo (m³):</label>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Consumo M&iacute;nimo (m&sup3;):</label>
             <input type="number" id="custCompMinM3" class="stepper-input" style="height:36px;font-size:13px;width:100%" value="6">
           </div>
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Tarifa Mínima Água (R$):</label>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Tarifa M&iacute;nima &Aacute;gua (R$):</label>
             <input type="number" id="custCompMinCost" class="stepper-input" style="height:36px;font-size:13px;width:100%" value="44.77" step="0.01">
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Taxa Esgoto Padrão (%):</label>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Taxa Esgoto Padr&atilde;o (%):</label>
             <input type="number" id="custCompSewage" class="stepper-input" style="height:36px;font-size:13px;width:100%" value="80">
           </div>
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Tarifa Faixa 2 (>6 a 10m³):</label>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Tarifa Faixa 2 (&gt;6 a 10 m&sup3;):</label>
             <input type="number" id="custCompTier2" class="stepper-input" style="height:36px;font-size:13px;width:100%" value="8.85" step="0.01">
           </div>
         </div>
@@ -408,10 +432,10 @@ button:disabled{opacity:.4;cursor:not-allowed}
 
       <!-- SELETOR DA TAXA DE ESGOTO -->
       <div style="margin-top:10px">
-        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600">Serviço de Esgotamento Sanitário:</label>
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600">Servi&ccedil;o de Esgotamento Sanit&aacute;rio:</label>
         <div class="chip-group" id="sewageChipGroup">
-          <div class="chip active" onclick="setSewagePct(80)">80% (Padrão Embasa)</div>
-          <div class="chip" onclick="setSewagePct(40)">40% (Decisão Judicial)</div>
+          <div class="chip active" onclick="setSewagePct(80)">80% (Padr&atilde;o Embasa)</div>
+          <div class="chip" onclick="setSewagePct(40)">40% (Decis&atilde;o Judicial)</div>
           <div class="chip" onclick="setSewagePct(0)">0% (Sem Rede / Fossa)</div>
         </div>
       </div>
@@ -419,60 +443,60 @@ button:disabled{opacity:.4;cursor:not-allowed}
 
     <!-- ESTIMATIVA DA CONTA (CARD HERO) -->
     <div class="bill-hero">
-      <div id="billCompBadge" class="bill-badge">EMBASA • Residencial</div>
+      <div id="billCompBadge" class="bill-badge">EMBASA &bull; Residencial</div>
       <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Estimativa da Conta Mensal</div>
       <div id="billTotalAmount" class="bill-amount">R$ 0,00</div>
-      <div id="billSubtitle" class="bill-subtitle">Calculado para 0 m³ de consumo no mês</div>
+      <div id="billSubtitle" class="bill-subtitle">Calculado para 0 m&sup3; de consumo no m&ecirc;s</div>
 
       <div class="bill-split">
         <div class="bill-split-box">
-          <small>💧 Água</small>
+          <small>&#128167; &Aacute;gua</small>
           <strong id="billWaterVal">R$ 0,00</strong>
         </div>
         <div class="bill-split-box">
-          <small>🧪 Esgoto (<span id="billSewagePctText">80%</span>)</small>
+          <small>&#129514; Esgoto (<span id="billSewagePctText">80%</span>)</small>
           <strong id="billSewageVal">R$ 0,00</strong>
         </div>
       </div>
     </div>
 
-    <!-- TERMÔMETRO DE FAIXA PROGRESSIVA -->
+    <!-- TERM&Ocirc;METRO DE FAIXA PROGRESSIVA -->
     <div class="card">
       <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
-        <span>Faixa Tarifária Atual</span>
-        <span id="tierBadge" style="color:var(--accent);font-size:12px;font-weight:800">Faixa 1 (0 a 6 m³)</span>
+        <span>Faixa Tarif&aacute;ria Atual</span>
+        <span id="tierBadge" style="color:var(--accent);font-size:12px;font-weight:800">Faixa 1 (0 a 6 m&sup3;)</span>
       </div>
 
       <div class="tier-meter-track">
         <div id="tierMeterFill" class="tier-meter-fill" style="width:50%"></div>
       </div>
       <div class="tier-info-row">
-        <span id="tierMeterMin">0 m³</span>
-        <span id="tierMeterCurrent" style="font-weight:700;color:var(--text)">Consumo: 6.0 m³</span>
-        <span id="tierMeterMax">10 m³</span>
+        <span id="tierMeterMin">0 m&sup3;</span>
+        <span id="tierMeterCurrent" style="font-weight:700;color:var(--text)">Consumo: 6.0 m&sup3;</span>
+        <span id="tierMeterMax">10 m&sup3;</span>
       </div>
 
       <div id="tierAlertBox" class="tip-box">
-        💡 <strong>Fique atento:</strong> Faltam <strong>2.0 m³ (2.000 L)</strong> para mudar de faixa tarifária.
+        &#128161; <strong>Fique atento:</strong> Faltam <strong>2.0 m&sup3; (2.000 L)</strong> para mudar de faixa tarif&aacute;ria.
       </div>
     </div>
 
-    <!-- SIMULADOR & MEDIÇÃO RESIDENCIAL -->
+    <!-- SIMULADOR &amp; MEDI&Ccedil;&Atilde;O RESIDENCIAL -->
     <div class="card">
-      <div class="section-title">Medição & Perfil da Casa</div>
+      <div class="section-title">Medi&ccedil;&atilde;o &amp; Perfil da Casa</div>
 
-      <!-- Segmented Control para o modo de simulação -->
+      <!-- Segmented Control para o modo de simula&ccedil;&atilde;o -->
       <div style="display:flex;background:var(--card-inner);border:1px solid var(--border);border-radius:10px;padding:3px;gap:4px;margin-bottom:14px">
-        <button type="button" id="btnSimModeHouse" class="tab-sub-btn active" onclick="setSimMode('house')">🏡 Perfil da Família</button>
-        <button type="button" id="btnSimModeDirect" class="tab-sub-btn" onclick="setSimMode('direct')">🚰 Hidrômetro (m³)</button>
+        <button type="button" id="btnSimModeHouse" class="tab-sub-btn active" onclick="setSimMode('house')">&#127969; Perfil da Fam&iacute;lia</button>
+        <button type="button" id="btnSimModeDirect" class="tab-sub-btn" onclick="setSimMode('direct')">&#128688; Hidr&ocirc;metro (m&sup3;)</button>
       </div>
 
-      <!-- MODO 1: PERFIL DA FAMÍLIA -->
+      <!-- MODO 1: PERFIL DA FAM&Iacute;LIA -->
       <div id="boxSimHouse">
         <div class="input-row">
           <label>Moradores:</label>
           <div class="stepper-row" style="flex:1;margin-bottom:0">
-            <button type="button" class="stepper-btn" style="height:36px;width:36px" onclick="stepResidents(-1)">−</button>
+            <button type="button" class="stepper-btn" style="height:36px;width:36px" onclick="stepResidents(-1)">&minus;</button>
             <input type="number" id="inpResidents" class="stepper-input" style="height:36px" value="3" min="1" max="15" oninput="recalcBill()">
             <span class="stepper-unit">pessoas</span>
             <button type="button" class="stepper-btn" style="height:36px;width:36px" onclick="stepResidents(1)">+</button>
@@ -482,7 +506,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
         <div class="input-row">
           <label>Banhos/dia:</label>
           <div class="stepper-row" style="flex:1;margin-bottom:0">
-            <button type="button" class="stepper-btn" style="height:36px;width:36px" onclick="stepDailyBaths(-1)">−</button>
+            <button type="button" class="stepper-btn" style="height:36px;width:36px" onclick="stepDailyBaths(-1)">&minus;</button>
             <input type="number" id="inpDailyBaths" class="stepper-input" style="height:36px" value="1" min="1" max="5" oninput="recalcBill()">
             <span class="stepper-unit">por pessoa</span>
             <button type="button" class="stepper-btn" style="height:36px;width:36px" onclick="stepDailyBaths(1)">+</button>
@@ -490,43 +514,43 @@ button:disabled{opacity:.4;cursor:not-allowed}
         </div>
 
         <div class="input-row">
-          <label>Média Banho:</label>
+          <label>M&eacute;dia Banho:</label>
           <div style="display:flex;align-items:center;gap:6px;flex:1">
             <input type="number" id="inpHouseAvgShower" class="stepper-input" style="height:36px;flex:1" value="32" min="5" max="250" oninput="recalcBill()">
             <span class="stepper-unit">L</span>
-            <button type="button" class="btn-secondary" style="height:36px;font-size:11px;padding:0 8px;border-radius:8px;white-space:nowrap" onclick="useSmartShowerAvg()">🔄 Média Real</button>
+            <button type="button" class="btn-secondary" style="height:36px;font-size:11px;padding:0 8px;border-radius:8px;white-space:nowrap" onclick="useSmartShowerAvg()">&#128260; M&eacute;dia Real</button>
           </div>
         </div>
 
         <div style="margin-top:10px">
-          <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px">Participação do Chuveiro no Total da Casa:</label>
+          <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px">Participa&ccedil;&atilde;o do Chuveiro no Total da Casa:</label>
           <div class="chip-group" id="showerWeightGroup">
             <div class="chip" onclick="setShowerWeight(30)">30%</div>
-            <div class="chip active" onclick="setShowerWeight(40)">40% (Média Nacional)</div>
+            <div class="chip active" onclick="setShowerWeight(40)">40% (M&eacute;dia Nacional)</div>
             <div class="chip" onclick="setShowerWeight(50)">50%</div>
           </div>
         </div>
 
         <div class="cost-helper" id="houseSimHelper" style="margin-top:10px">
-          🚿 Banhos: <strong>2.880 L/mês</strong> • Casa toda: <strong>~7,20 m³ (7.200 L)</strong>
+          &#128703; Banhos: <strong>2.880 L/m&ecirc;s</strong> &bull; Casa toda: <strong>~7,20 m&sup3; (7.200 L)</strong>
         </div>
       </div>
 
-      <!-- MODO 2: SIMULAÇÃO DIRETA (M³) -->
+      <!-- MODO 2: SIMULA&Ccedil;&Atilde;O DIRETA (M&sup3;) -->
       <div id="boxSimDirect" style="display:none">
         <div class="chip-group">
-          <div class="chip" onclick="setDirectM3(5)">5 m³ (Mín.)</div>
-          <div class="chip" onclick="setDirectM3(8)">8 m³</div>
-          <div class="chip active" onclick="setDirectM3(12)">12 m³</div>
-          <div class="chip" onclick="setDirectM3(18)">18 m³</div>
-          <div class="chip" onclick="setDirectM3(25)">25 m³</div>
-          <div class="chip" onclick="setDirectM3(35)">35 m³</div>
+          <div class="chip" onclick="setDirectM3(5)">5 m&sup3; (M&iacute;n.)</div>
+          <div class="chip" onclick="setDirectM3(8)">8 m&sup3;</div>
+          <div class="chip active" onclick="setDirectM3(12)">12 m&sup3;</div>
+          <div class="chip" onclick="setDirectM3(18)">18 m&sup3;</div>
+          <div class="chip" onclick="setDirectM3(25)">25 m&sup3;</div>
+          <div class="chip" onclick="setDirectM3(35)">35 m&sup3;</div>
         </div>
 
         <div class="stepper-row" style="margin-top:10px">
-          <button type="button" class="stepper-btn" onclick="stepDirectM3(-1)">−</button>
+          <button type="button" class="stepper-btn" onclick="stepDirectM3(-1)">&minus;</button>
           <input type="number" id="inpDirectM3" class="stepper-input" value="12" min="1" max="500" step="0.5" oninput="recalcBill()">
-          <span class="stepper-unit">m³</span>
+          <span class="stepper-unit">m&sup3;</span>
           <button type="button" class="stepper-btn" onclick="stepDirectM3(1)">+</button>
         </div>
       </div>
@@ -551,7 +575,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 
       <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
         <button type="button" class="action btn-primary" style="width:100%" onclick="syncTariffWithArduino()">
-          ⚡ Sincronizar Tarifa com SmartShower
+          &#9889; Sincronizar Tarifa com SmartShower
         </button>
         <div id="billSyncMsg" style="font-size:12px;text-align:center;margin-top:8px;color:var(--ok);display:none">
           Tarifa sincronizada com o chuveiro com sucesso!
@@ -563,37 +587,37 @@ button:disabled{opacity:.4;cursor:not-allowed}
 
   <!-- ABA 4: AJUSTES -->
   <section id="tabConfig" class="tab-content">
-    <!-- TARIFA DE ÁGUA -->
+    <!-- TARIFA DE &Aacute;GUA -->
     <div class="card">
-      <div class="section-title">Tarifa de Água & Esgoto</div>
+      <div class="section-title">Tarifa de &Aacute;gua &amp; Esgoto</div>
       
       <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
         <span style="font-size:12px;color:var(--muted)">Empresa: <strong id="cfgActiveCompName" style="color:var(--accent)">EMBASA</strong></span>
-        <button type="button" class="btn-secondary" style="height:26px;padding:0 8px;font-size:11px;border-radius:6px;cursor:pointer" onclick="switchTab('tabBilling')">Regras & Faixas ↗</button>
+        <button type="button" class="btn-secondary" style="height:26px;padding:0 8px;font-size:11px;border-radius:6px;cursor:pointer" onclick="switchTab('tabBilling')">Regras &amp; Faixas &#x2197;</button>
       </div>
 
       <div style="margin-bottom:12px">
-        <label style="display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600">Valor da Tarifa por m³:</label>
+        <label style="display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600">Valor da Tarifa por m&sup3;:</label>
         <div class="input-currency">
           <span>R$</span>
           <input type="text" id="cfgTariff" value="12,50" oninput="updateTariffHelper()">
-          <span style="font-size:12px;color:var(--muted);white-space:nowrap">/ m³</span>
+          <span style="font-size:12px;color:var(--muted);white-space:nowrap">/ m&sup3;</span>
         </div>
       </div>
 
       <div id="tariffHelper" class="cost-helper">
-        💰 Equivale a <strong>R$ 0,0125</strong> por litro (ou <strong>~R$ 0,38</strong> por banho de 30L).
+        &#128176; Equivale a <strong>R$ 0,0125</strong> por litro (ou <strong>~R$ 0,38</strong> por banho de 30L).
       </div>
 
       <button class="action btn-primary" style="width:100%" onclick="saveTariff()">Salvar Tarifa</button>
       <div id="tariffMsg" style="font-size:12px;text-align:center;margin-top:8px;color:var(--ok);display:none">Tarifa salva com sucesso!</div>
     </div>
 
-    <!-- ASSISTENTE DE CALIBRAÇÃO DO SENSOR -->
+    <!-- ASSISTENTE DE CALIBRA&Ccedil;&Atilde;O DO SENSOR -->
     <div class="card">
-      <div class="section-title">🎯 Calibração do Sensor de Fluxo</div>
+      <div class="section-title">&#127919; Calibra&ccedil;&atilde;o do Sensor de Fluxo</div>
       <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px">
-        Fator ativo: <strong id="curPulsesDisplay" style="color:var(--accent)">450.0 pulsos/L</strong> (Padrão de fábrica: 450.0)
+        Fator ativo: <strong id="curPulsesDisplay" style="color:var(--accent)">450.0 pulsos/L</strong> (Padr&atilde;o de f&aacute;brica: 450.0)
       </p>
 
       <div class="calib-box">
@@ -605,38 +629,38 @@ button:disabled{opacity:.4;cursor:not-allowed}
           <div class="chip" onclick="setCalibVol(2000)">2000 ml (2 L)</div>
         </div>
         <div class="stepper-row">
-          <button type="button" class="stepper-btn" onclick="stepCalibVol(-100)">−</button>
+          <button type="button" class="stepper-btn" onclick="stepCalibVol(-100)">&minus;</button>
           <input type="number" id="inpCalibVol" class="stepper-input" value="500" min="100" max="10000" step="50" oninput="updateCalibChipSelection()">
           <span class="stepper-unit">ml</span>
           <button type="button" class="stepper-btn" onclick="stepCalibVol(100)">+</button>
         </div>
 
-        <div style="font-size:13px;font-weight:700;margin:12px 0 6px">2. Executar Medição</div>
+        <div style="font-size:13px;font-weight:700;margin:12px 0 6px">2. Executar Medi&ccedil;&atilde;o</div>
         <p style="font-size:12px;color:var(--muted);margin-bottom:10px">
-          Posicione a garrafa/jarra sob a água. Clique em iniciar, encha até a marca exata e finalize.
+          Posicione a garrafa/jarra sob a &aacute;gua. Clique em iniciar, encha at&eacute; a marca exata e finalize.
         </p>
 
         <div id="calibActiveArea" style="display:none;text-align:center;margin-bottom:12px">
           <div class="calib-counter calib-pulse-anim" id="calibPulsesCount">0</div>
-          <div style="font-size:12px;color:var(--accent);font-weight:600">💧 Contando pulsos do sensor em tempo real...</div>
+          <div style="font-size:12px;color:var(--accent);font-weight:600">&#128167; Contando pulsos do sensor em tempo real...</div>
         </div>
 
         <div class="btn-grid">
-          <button id="btnStartCalib" class="action btn-primary" onclick="startCalibration()">▶ Iniciar Medição de Teste</button>
-          <button id="btnStopCalib" class="action btn-stop" onclick="stopCalibration()" style="display:none">⏹ Encheu! Concluir Teste</button>
+          <button id="btnStartCalib" class="action btn-primary" onclick="startCalibration()">&#9654; Iniciar Medi&ccedil;&atilde;o de Teste</button>
+          <button id="btnStopCalib" class="action btn-stop" onclick="stopCalibration()" style="display:none">&#9209; Encheu! Concluir Teste</button>
         </div>
 
-        <!-- RESULTADO DA CALIBRAÇÃO -->
+        <!-- RESULTADO DA CALIBRA&Ccedil;&Atilde;O -->
         <div id="calibResultCard" class="calib-result">
-          <div style="font-size:14px;font-weight:800;color:var(--ok);margin-bottom:4px">✨ Calibração Calculada!</div>
+          <div style="font-size:14px;font-weight:800;color:var(--ok);margin-bottom:4px">&#10024; Calibra&ccedil;&atilde;o Calculada!</div>
           <div id="calibResultDetails" style="font-size:13px;color:var(--text);margin-bottom:10px"></div>
           <div class="btn-grid">
-            <button class="action btn-primary" onclick="applyCalculatedCalib()">✅ Aplicar Nova Calibração</button>
+            <button class="action btn-primary" onclick="applyCalculatedCalib()">&#9989; Aplicar Nova Calibra&ccedil;&atilde;o</button>
           </div>
         </div>
       </div>
 
-      <!-- AJUSTE MANUAL E RESTAURAÇÃO -->
+      <!-- AJUSTE MANUAL E RESTAURA&Ccedil;&Atilde;O -->
       <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
           <label style="font-size:13px;color:var(--muted);white-space:nowrap">Ajuste Manual:</label>
@@ -644,8 +668,8 @@ button:disabled{opacity:.4;cursor:not-allowed}
           <span style="font-size:12px;color:var(--muted)">p/L</span>
           <button class="action btn-secondary" style="height:38px;padding:0 14px;font-size:12px;white-space:nowrap" onclick="saveManualPulses()">Aplicar</button>
         </div>
-        <button class="action btn-secondary" style="width:100%;height:38px;font-size:12px;color:var(--muted)" onclick="resetFactoryCalib()">🔄 Restaurar Padrão de Fábrica (450.0 pulsos/L)</button>
-        <div id="calibSuccessMsg" style="font-size:12px;text-align:center;margin-top:8px;color:var(--ok);display:none">Calibração salva com sucesso!</div>
+        <button class="action btn-secondary" style="width:100%;height:38px;font-size:12px;color:var(--muted)" onclick="resetFactoryCalib()">&#128260; Restaurar Padr&atilde;o de F&aacute;brica (450.0 pulsos/L)</button>
+        <div id="calibSuccessMsg" style="font-size:12px;text-align:center;margin-top:8px;color:var(--ok);display:none">Calibra&ccedil;&atilde;o salva com sucesso!</div>
       </div>
     </div>
   </section>
@@ -817,7 +841,7 @@ async function fetchHistory(){
             <strong>Banho #${item.id}</strong> 
             <span class="tag">${modoNome}</span>
             <div style="color:var(--muted);font-size:11px;margin-top:2px">
-              ⏱️ ${formatSec(item.seconds)} • 💧 ${Number(item.liters).toFixed(1)} L
+              &#9201;&#65039; ${formatSec(item.seconds)} &bull; &#128167; ${Number(item.liters).toFixed(1)} L
             </div>
           </div>
           <div style="text-align:right">
@@ -843,7 +867,7 @@ function updateTariffHelper(){
   let costPerLiter = val / 1000.0;
   let cost30L = costPerLiter * 30.0;
   document.getElementById('tariffHelper').innerHTML = 
-    `💰 Equivale a <strong>R$ ${costPerLiter.toFixed(4).replace('.',',')}</strong> por litro (ou <strong>~R$ ${cost30L.toFixed(2).replace('.',',')}</strong> por banho de 30L).`;
+    `&#128176; Equivale a <strong>R$ ${costPerLiter.toFixed(4).replace('.',',')}</strong> por litro (ou <strong>~R$ ${cost30L.toFixed(2).replace('.',',')}</strong> por banho de 30L).`;
 }
 
 async function fetchConfig(){
@@ -869,7 +893,7 @@ async function saveTariff(){
   setTimeout(()=>msg.style.display='none', 3000);
 }
 
-// CALIBRAÇÃO
+// CALIBRACAO
 function setCalibVol(ml){
   document.getElementById('inpCalibVol').value = ml;
   updateCalibChipSelection();
@@ -907,7 +931,7 @@ async function startCalibration(){
       }catch(e){}
     }, 500);
   }catch(e){
-    alert('Erro ao iniciar calibração');
+    alert('Erro ao iniciar calibra\u00e7\u00e3o');
   }
 }
 
@@ -925,7 +949,7 @@ async function stopCalibration(){
     let liters = ml / 1000.0;
 
     if(pulses <= 0){
-      alert('Nenhum pulso detectado. Verifique o fluxo de água no sensor.');
+      alert('Nenhum pulso detectado. Verifique o fluxo de \u00e1gua no sensor.');
       return;
     }
 
@@ -936,11 +960,11 @@ async function stopCalibration(){
     document.getElementById('calibResultDetails').innerHTML = `
       Foram contados <strong>${pulses} pulsos</strong> para <strong>${ml} ml</strong> (${liters.toFixed(2)} L).<br>
       Fator calculado: <strong style="color:var(--accent);font-size:16px">${calculatedFactor.toFixed(1)} pulsos/Litro</strong><br>
-      <span style="color:var(--muted);font-size:11px">Variação de ${diffStr} em relação ao padrão de 450.0</span>
+      <span style="color:var(--muted);font-size:11px">Varia&ccedil;&atilde;o de ${diffStr} em rela&ccedil;&atilde;o ao padr&atilde;o de 450.0</span>
     `;
     document.getElementById('calibResultCard').classList.add('show');
   }catch(e){
-    alert('Erro ao concluir calibração');
+    alert('Erro ao concluir calibra\u00e7\u00e3o');
   }
 }
 
@@ -949,7 +973,7 @@ async function applyCalculatedCalib(){
   document.getElementById('curPulsesDisplay').textContent = calculatedFactor.toFixed(1) + ' pulsos/L';
   document.getElementById('cfgManualPulses').value = Math.round(calculatedFactor);
   document.getElementById('calibResultCard').classList.remove('show');
-  showCalibSuccess('Calibração aplicada com sucesso!');
+  showCalibSuccess('Calibra&ccedil;&atilde;o aplicada com sucesso!');
 }
 
 async function saveManualPulses(){
@@ -957,7 +981,7 @@ async function saveManualPulses(){
   if(isNaN(p) || p < 10) return;
   await api(`/api/config?pulses=${p}`, {method:'POST'});
   document.getElementById('curPulsesDisplay').textContent = p.toFixed(1) + ' pulsos/L';
-  showCalibSuccess('Calibração manual aplicada!');
+  showCalibSuccess('Calibra&ccedil;&atilde;o manual aplicada!');
 }
 
 async function resetFactoryCalib(){
@@ -965,12 +989,12 @@ async function resetFactoryCalib(){
   document.getElementById('curPulsesDisplay').textContent = '450.0 pulsos/L';
   document.getElementById('cfgManualPulses').value = 450;
   document.getElementById('calibResultCard').classList.remove('show');
-  showCalibSuccess('Padrão de fábrica restaurado (450.0 pulsos/L)!');
+  showCalibSuccess('Padr&atilde;o de f&aacute;brica restaurado (450.0 pulsos/L)!');
 }
 
 function showCalibSuccess(text){
   const msg = document.getElementById('calibSuccessMsg');
-  msg.textContent = text;
+  msg.innerHTML = text;
   msg.style.display = 'block';
   setTimeout(()=>msg.style.display='none', 3000);
 }
@@ -979,10 +1003,10 @@ async function poll(){
   try{
     const s = await api('/api/status');
     const badge = document.getElementById('statusBadge');
-    badge.textContent = '● Conectado';
+    badge.innerHTML = '&bull; Conectado';
     badge.classList.remove('offline');
 
-    // Litros, Vazão, Tempo e Custo
+    // Litros, Vazao, Tempo e Custo
     document.getElementById('liveLiters').textContent = Number(s.liters).toFixed(1);
     document.getElementById('liveFlow').innerHTML = Number(s.flow).toFixed(1) + ' <span style="font-size:11px;font-weight:normal">L/m</span>';
     document.getElementById('liveTime').textContent = formatSec(s.seconds);
@@ -994,28 +1018,28 @@ async function poll(){
     isPaused = (s.state === 'paused');
 
     if(s.state === 'paused'){
-      pill.textContent = '🧼 Modo Ensaboar';
+      pill.innerHTML = '&#129532; Modo Ensaboar';
       pill.className = 'status-pill paused';
     } else if(isRunning){
-      pill.textContent = '💧 Banho em Andamento';
+      pill.innerHTML = '&#128167; Banho em Andamento';
       pill.className = 'status-pill active';
     } else if(s.state === 'finished'){
-      pill.textContent = '🏁 Banho Finalizado';
+      pill.innerHTML = '&#127937; Banho Finalizado';
       pill.className = 'status-pill';
     } else {
       pill.textContent = 'Pronto';
       pill.className = 'status-pill';
     }
 
-    // Botões
+    // Botoes
     document.getElementById('btnStart').style.display = isRunning ? 'none' : 'flex';
     document.getElementById('btnPause').style.display = isRunning ? 'flex' : 'none';
     document.getElementById('btnStop').style.display = isRunning ? 'flex' : 'none';
 
     if(isPaused){
-      document.getElementById('btnPause').textContent = '▶ RETOMAR BANHO';
+      document.getElementById('btnPause').innerHTML = '&#9654; RETOMAR BANHO';
     } else {
-      document.getElementById('btnPause').textContent = '🧼 MODO ENSABOAR';
+      document.getElementById('btnPause').innerHTML = '&#129532; MODO ENSABOAR';
     }
 
     // Barra de progresso
@@ -1034,68 +1058,68 @@ async function poll(){
     if(s.state === 'finished'){
       resCard.classList.add('show');
       document.getElementById('resScore').textContent = 'Nota ' + s.score;
-      document.getElementById('resText').textContent = 
-        `${Number(s.liters).toFixed(1)} Litros em ${formatSec(s.seconds)} • Custo: R$ ${Number(s.cost).toFixed(2).replace('.',',')}`;
+      document.getElementById('resText').innerHTML = 
+        `${Number(s.liters).toFixed(1)} Litros em ${formatSec(s.seconds)} &bull; Custo: R$ ${Number(s.cost).toFixed(2).replace('.',',')}`;
     } else {
       resCard.classList.remove('show');
     }
 
   }catch(e){
     const badge = document.getElementById('statusBadge');
-    badge.textContent = '● Sem resposta';
+    badge.innerHTML = '&bull; Sem resposta';
     badge.classList.add('offline');
   }
 }
 
 // ======================================================
-// CONCESSIONÁRIAS DE ÁGUA E ESTIMADOR MENSAL (EMBASA)
+// CONCESSIONARIAS DE AGUA E ESTIMADOR MENSAL (EMBASA)
 // ======================================================
 const PRESET_COMPANIES = [
   {
     id: 'embasa_normal',
     name: 'EMBASA - Residencial Normal (Bahia)',
-    desc: 'Regra EMBASA: 0 a 6 m³ fixo (R$ 44,77) + excedente progressivo por faixas + 80% esgoto.',
+    desc: 'Regra EMBASA: 0 a 6 m&sup3; fixo (R$ 44,77) + excedente progressivo por faixas + 80% esgoto.',
     minM3: 6,
     minCost: 44.77,
     sewagePct: 80,
     tiers: [
-      { max: 6, rate: 0.0, label: '0 a 6 m³ (Mínimo Fixo)' },
-      { max: 10, rate: 8.85, label: '7 a 10 m³' },
-      { max: 15, rate: 11.20, label: '11 a 15 m³' },
-      { max: 20, rate: 13.80, label: '16 a 20 m³' },
-      { max: 30, rate: 16.90, label: '21 a 30 m³' },
-      { max: 50, rate: 20.40, label: '31 a 50 m³' },
-      { max: 9999, rate: 24.10, label: 'Acima de 50 m³' }
+      { max: 6, rate: 0.0, label: '0 a 6 m&sup3; (M&iacute;nimo Fixo)' },
+      { max: 10, rate: 8.85, label: '7 a 10 m&sup3;' },
+      { max: 15, rate: 11.20, label: '11 a 15 m&sup3;' },
+      { max: 20, rate: 13.80, label: '16 a 20 m&sup3;' },
+      { max: 30, rate: 16.90, label: '21 a 30 m&sup3;' },
+      { max: 50, rate: 20.40, label: '31 a 50 m&sup3;' },
+      { max: 9999, rate: 24.10, label: 'Acima de 50 m&sup3;' }
     ]
   },
   {
     id: 'embasa_social',
     name: 'EMBASA - Residencial Social',
-    desc: 'Regra EMBASA: CadÚnico / Baixa Renda. Mínimo 0 a 6 m³ (R$ 16,28) + 80% esgoto.',
+    desc: 'Regra EMBASA: Cad&Uacute;nico / Baixa Renda. M&iacute;nimo 0 a 6 m&sup3; (R$ 16,28) + 80% esgoto.',
     minM3: 6,
     minCost: 16.28,
     sewagePct: 80,
     tiers: [
-      { max: 6, rate: 0.0, label: '0 a 6 m³ (Mínimo Fixo)' },
-      { max: 10, rate: 4.40, label: '7 a 10 m³' },
-      { max: 15, rate: 7.80, label: '11 a 15 m³' },
-      { max: 20, rate: 11.50, label: '16 a 20 m³' },
-      { max: 9999, rate: 15.20, label: 'Acima de 20 m³' }
+      { max: 6, rate: 0.0, label: '0 a 6 m&sup3; (M&iacute;nimo Fixo)' },
+      { max: 10, rate: 4.40, label: '7 a 10 m&sup3;' },
+      { max: 15, rate: 7.80, label: '11 a 15 m&sup3;' },
+      { max: 20, rate: 11.50, label: '16 a 20 m&sup3;' },
+      { max: 9999, rate: 15.20, label: 'Acima de 20 m&sup3;' }
     ]
   },
   {
     id: 'embasa_comercial',
     name: 'EMBASA - Comercial',
-    desc: 'Regra EMBASA: Comércio e Serviços. Mínimo 0 a 6 m³ (R$ 74,50) + 80% esgoto.',
+    desc: 'Regra EMBASA: Com&eacute;rcio e Servi&ccedil;os. M&iacute;nimo 0 a 6 m&sup3; (R$ 74,50) + 80% esgoto.',
     minM3: 6,
     minCost: 74.50,
     sewagePct: 80,
     tiers: [
-      { max: 6, rate: 0.0, label: '0 a 6 m³ (Mínimo Fixo)' },
-      { max: 10, rate: 12.30, label: '7 a 10 m³' },
-      { max: 20, rate: 16.80, label: '11 a 20 m³' },
-      { max: 50, rate: 21.90, label: '21 a 50 m³' },
-      { max: 9999, rate: 26.50, label: 'Acima de 50 m³' }
+      { max: 6, rate: 0.0, label: '0 a 6 m&sup3; (M&iacute;nimo Fixo)' },
+      { max: 10, rate: 12.30, label: '7 a 10 m&sup3;' },
+      { max: 20, rate: 16.80, label: '11 a 20 m&sup3;' },
+      { max: 50, rate: 21.90, label: '21 a 50 m&sup3;' },
+      { max: 9999, rate: 26.50, label: 'Acima de 50 m&sup3;' }
     ]
   }
 ];
@@ -1155,8 +1179,8 @@ function updateCompanyDesc(){
   const c = getActiveCompany();
   const descEl = document.getElementById('companyDesc');
   const badgeEl = document.getElementById('billCompBadge');
-  if(descEl) descEl.textContent = c.desc || '';
-  if(badgeEl) badgeEl.textContent = c.name;
+  if(descEl) descEl.innerHTML = c.desc || '';
+  if(badgeEl) badgeEl.innerHTML = c.name;
 }
 
 function onCompanySelectChange(){
@@ -1183,7 +1207,7 @@ function saveCustomCompany(){
   let tier2Rate = parseFloat(document.getElementById('custCompTier2').value) || 8.0;
 
   if(!name){
-    alert('Por favor, informe o nome da concessionária.');
+    alert('Por favor, informe o nome da concession\u00e1ria.');
     return;
   }
 
@@ -1191,15 +1215,15 @@ function saveCustomCompany(){
   let newComp = {
     id: customId,
     name: name + ' (Personalizada)',
-    desc: `Tarifa customizada: Mínimo ${minM3} m³ (R$ ${minCost.toFixed(2)}) + ${sewage}% esgoto.`,
+    desc: `Tarifa customizada: M&iacute;nimo ${minM3} m&sup3; (R$ ${minCost.toFixed(2)}) + ${sewage}% esgoto.`,
     minM3: minM3,
     minCost: minCost,
     sewagePct: sewage,
     tiers: [
-      { max: minM3, rate: 0.0, label: `0 a ${minM3} m³ (Mínimo Fixo)` },
-      { max: minM3 + 4, rate: tier2Rate, label: `${minM3 + 1} a ${minM3 + 4} m³` },
-      { max: minM3 + 9, rate: tier2Rate * 1.3, label: `${minM3 + 5} a ${minM3 + 9} m³` },
-      { max: 9999, rate: tier2Rate * 1.7, label: `Acima de ${minM3 + 9} m³` }
+      { max: minM3, rate: 0.0, label: `0 a ${minM3} m&sup3; (M&iacute;nimo Fixo)` },
+      { max: minM3 + 4, rate: tier2Rate, label: `${minM3 + 1} a ${minM3 + 4} m&sup3;` },
+      { max: minM3 + 9, rate: tier2Rate * 1.3, label: `${minM3 + 5} a ${minM3 + 9} m&sup3;` },
+      { max: 9999, rate: tier2Rate * 1.7, label: `Acima de ${minM3 + 9} m&sup3;` }
     ]
   };
 
@@ -1273,7 +1297,7 @@ async function useSmartShowerAvg(){
       alert('Nenhum banho registrado no SmartShower ainda. O valor de 32L foi mantido.');
     }
   }catch(e){
-    alert('Não foi possível obter a média do histórico.');
+    alert('N\u00e3o foi poss\u00edvel obter a m\u00e9dia do hist\u00f3rico.');
   }
 }
 
@@ -1402,7 +1426,7 @@ function recalcBill(){
 
     const simHelper = document.getElementById('houseSimHelper');
     if(simHelper){
-      simHelper.innerHTML = `🚿 Banhos: <strong>${Math.round(showerLMonth).toLocaleString('pt-BR')} L/mês</strong> • Casa toda: <strong>~${estimatedM3.toFixed(2).replace('.', ',')} m³ (${Math.round(totalHouseL).toLocaleString('pt-BR')} L)</strong>`;
+      simHelper.innerHTML = `&#128703; Banhos: <strong>${Math.round(showerLMonth).toLocaleString('pt-BR')} L/m&ecirc;s</strong> &bull; Casa toda: <strong>~${estimatedM3.toFixed(2).replace('.', ',')} m&sup3; (${Math.round(totalHouseL).toLocaleString('pt-BR')} L)</strong>`;
     }
   } else {
     estimatedM3 = parseFloat(document.getElementById('inpDirectM3').value) || 12;
@@ -1414,15 +1438,15 @@ function recalcBill(){
   // Atualiza Hero Card
   document.getElementById('billTotalAmount').textContent = 'R$ ' + bill.totalCost.toFixed(2).replace('.', ',');
   document.getElementById('billSubtitle').innerHTML = 
-    `Calculado para <strong>${bill.vol.toFixed(1).replace('.', ',')} m³</strong> no mês (tarifa média R$ ${bill.effectiveRate.toFixed(2).replace('.', ',')}/m³)`;
+    `Calculado para <strong>${bill.vol.toFixed(1).replace('.', ',')} m&sup3;</strong> no m&ecirc;s (tarifa m&eacute;dia R$ ${bill.effectiveRate.toFixed(2).replace('.', ',')}/m&sup3;)`;
   document.getElementById('billWaterVal').textContent = 'R$ ' + bill.waterCost.toFixed(2).replace('.', ',');
   document.getElementById('billSewageVal').textContent = 'R$ ' + bill.sewageCost.toFixed(2).replace('.', ',');
 
-  // Atualiza Termômetro de Faixa
+  // Atualiza Termometro de Faixa
   document.getElementById('tierBadge').textContent = bill.currentTierLabel;
-  document.getElementById('tierMeterCurrent').textContent = `Consumo: ${bill.vol.toFixed(1)} m³`;
-  document.getElementById('tierMeterMin').textContent = `${bill.tierLower} m³`;
-  document.getElementById('tierMeterMax').textContent = (bill.tierUpper < 9000 ? `${bill.tierUpper} m³` : 'Max');
+  document.getElementById('tierMeterCurrent').innerHTML = `Consumo: ${bill.vol.toFixed(1)} m&sup3;`;
+  document.getElementById('tierMeterMin').innerHTML = `${bill.tierLower} m&sup3;`;
+  document.getElementById('tierMeterMax').innerHTML = (bill.tierUpper < 9000 ? `${bill.tierUpper} m&sup3;` : 'Max');
 
   let pctInTier = 100;
   if(bill.tierUpper < 9000){
@@ -1436,13 +1460,13 @@ function recalcBill(){
   if(bill.remainingToNext > 0){
     let remLitros = Math.round(bill.remainingToNext * 1000);
     alertBox.innerHTML = `
-      ⚠️ <strong>Atenção à faixa:</strong> Faltam apenas <strong>${bill.remainingToNext.toFixed(1).replace('.', ',')} m³ (${remLitros} Litros)</strong> para entrar na próxima faixa mais cara (R$ ${bill.nextTierRate.toFixed(2).replace('.', ',')}/m³)!<br>
-      💡 <em>Economizando 2 minutos de cada banho diário, sua casa evita subir de faixa tarifária.</em>
+      &#9888;&#65039; <strong>Aten&ccedil;&atilde;o &agrave; faixa:</strong> Faltam apenas <strong>${bill.remainingToNext.toFixed(1).replace('.', ',')} m&sup3; (${remLitros} Litros)</strong> para entrar na pr&oacute;xima faixa mais cara (R$ ${bill.nextTierRate.toFixed(2).replace('.', ',')}/m&sup3;)!<br>
+      &#128161; <em>Economizando 2 minutos de cada banho di&aacute;rio, sua casa evita subir de faixa tarif&aacute;ria.</em>
     `;
     alertBox.style.display = 'block';
   } else {
     alertBox.innerHTML = `
-      💡 <strong>Faixa Superior:</strong> Sua residência já atingiu as faixas com tarifa de água de maior valor. Cada litro economizado no banho gera a máxima economia na conta!
+      &#128161; <strong>Faixa Superior:</strong> Sua resid&ecirc;ncia j&aacute; atingiu as faixas com tarifa de &aacute;gua de maior valor. Cada litro economizado no banho gera a m&aacute;xima economia na conta!
     `;
     alertBox.style.display = 'block';
   }
@@ -1454,7 +1478,7 @@ function recalcBill(){
     bill.breakdown.forEach(item => {
       let activeClass = item.isActive ? ' class="active-tier"' : '';
       let rateStr = item.isMin ? 'Fixo' : ('R$ ' + item.rate.toFixed(2).replace('.', ','));
-      let volStr = item.isMin ? `${item.volInTier} m³` : `${item.volBilled.toFixed(1).replace('.', ',')} m³`;
+      let volStr = item.isMin ? `${item.volInTier} m&sup3;` : `${item.volBilled.toFixed(1).replace('.', ',')} m&sup3;`;
       rowsHtml += `
         <tr${activeClass}>
           <td>${item.label}</td>
@@ -1468,14 +1492,14 @@ function recalcBill(){
     // Linha do Esgoto
     rowsHtml += `
       <tr style="border-top:1px solid var(--border)">
-        <td>🧪 Esgotamento Sanitário (${bill.pctEsgoto}%)</td>
+        <td>&#129514; Esgotamento Sanit&aacute;rio (${bill.pctEsgoto}%)</td>
         <td class="num">--</td>
         <td class="num">${bill.pctEsgoto}%</td>
         <td class="num">R$ ${bill.sewageCost.toFixed(2).replace('.', ',')}</td>
       </tr>
       <tr style="font-weight:900;color:var(--ok);border-top:2px solid var(--border)">
         <td>TOTAL ESTIMADO</td>
-        <td class="num">${bill.vol.toFixed(1).replace('.', ',')} m³</td>
+        <td class="num">${bill.vol.toFixed(1).replace('.', ',')} m&sup3;</td>
         <td class="num">--</td>
         <td class="num">R$ ${bill.totalCost.toFixed(2).replace('.', ',')}</td>
       </tr>
@@ -1501,6 +1525,50 @@ async function syncTariffWithArduino(){
     alert('Erro ao sincronizar tarifa com o SmartShower.');
   }
 }
+
+// ==========================================
+// AUTENTICACAO DO PAINEL ADMINISTRATIVO
+// ==========================================
+const AUTH_KEY = 'smartshower_admin_auth_v2';
+const VALID_U = 'smartshower';
+const VALID_P = 'Sustentavel#2026';
+
+function checkAuth(){
+  const isAuth = sessionStorage.getItem(AUTH_KEY) === 'true';
+  const overlay = document.getElementById('loginOverlay');
+  const container = document.getElementById('adminMainContainer');
+  if(isAuth){
+    if(overlay) overlay.style.display = 'none';
+    if(container) container.style.display = 'block';
+  } else {
+    if(overlay) overlay.style.display = 'flex';
+    if(container) container.style.display = 'none';
+  }
+}
+
+function handleAdminLogin(e){
+  e.preventDefault();
+  const u = (document.getElementById('adminUser').value || '').trim();
+  const p = (document.getElementById('adminPass').value || '').trim();
+  const err = document.getElementById('loginErrMsg');
+
+  if(u === VALID_U && p === VALID_P){
+    sessionStorage.setItem(AUTH_KEY, 'true');
+    err.style.display = 'none';
+    checkAuth();
+  } else {
+    err.style.display = 'block';
+    document.getElementById('adminPass').value = '';
+    document.getElementById('adminPass').focus();
+  }
+}
+
+function adminLogout(){
+  sessionStorage.removeItem(AUTH_KEY);
+  window.location.href = '/';
+}
+
+checkAuth();
 
 setInterval(poll, 1000);
 poll();

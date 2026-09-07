@@ -6,7 +6,8 @@
   - Types.h         : Tipos de dados, estados e structs
   - FlowSensor.h    : Interrupção de hardware e medição de vazão/litros
   - ShowerSession.h : Regras de negócio, custo (R$), modo ensaboar, histórico
-  - WebApp.h        : Interface web (HTML/CSS/JS) servida localmente
+  - WebPublic.h     : Landing Page científica de conscientização (GET /)
+  - WebAdmin.h      : Painel operacional técnico restrito (GET /admin)
   - WebServerAPI.h  : Servidor HTTP e endpoints da API REST
   - DisplayUI.h     : Controle do LCD 16x2 I2C e 4 botões físicos
 */
