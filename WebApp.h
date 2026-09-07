@@ -116,17 +116,17 @@ header{
 }
 .stepper-input:focus{border-color:var(--accent)}
 .stepper-unit{font-size:13px;color:var(--muted);font-weight:600;min-width:32px}
-.input-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.input-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;width:100%;box-sizing:border-box}
 .input-row label{font-size:13px;color:var(--muted);min-width:70px}
 .input-currency{
-  display:flex;align-items:center;flex:1;background:var(--card-inner);
-  border:1px solid var(--border);border-radius:10px;padding:0 12px;gap:6px;
+  display:flex;align-items:center;width:100%;min-width:0;max-width:100%;box-sizing:border-box;
+  background:var(--card-inner);border:1px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;
 }
 .input-currency:focus-within{border-color:var(--accent)}
-.input-currency span{font-size:14px;color:var(--muted);font-weight:700}
+.input-currency span{font-size:14px;color:var(--muted);font-weight:700;white-space:nowrap}
 .input-currency input{
-  flex:1;height:42px;background:transparent;border:none;color:var(--text);
-  font-size:15px;font-weight:700;outline:none;
+  flex:1;min-width:0;width:100%;height:42px;background:transparent;border:none;color:var(--text);
+  font-size:16px;font-weight:700;outline:none;box-sizing:border-box;
 }
 .cost-helper{
   font-size:12px;color:var(--muted);background:var(--card-inner);border-radius:8px;
@@ -317,12 +317,12 @@ button:disabled{opacity:.4;cursor:not-allowed}
     <div class="card">
       <div class="section-title">Tarifa de Água & Esgoto</div>
       
-      <div class="input-row">
-        <label>Tarifa:</label>
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600">Valor da Tarifa por m³:</label>
         <div class="input-currency">
           <span>R$</span>
           <input type="text" id="cfgTariff" value="12,50" oninput="updateTariffHelper()">
-          <span style="font-size:12px;color:var(--muted)">/ m³</span>
+          <span style="font-size:12px;color:var(--muted);white-space:nowrap">/ m³</span>
         </div>
       </div>
 
@@ -383,10 +383,11 @@ button:disabled{opacity:.4;cursor:not-allowed}
 
       <!-- AJUSTE MANUAL E RESTAURAÇÃO -->
       <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <label style="font-size:13px;color:var(--muted)">Ajuste Manual:</label>
-          <input type="number" id="cfgManualPulses" style="width:100px;height:38px;padding:0 8px;font-size:13px" step="1" min="50" max="2500" value="450">
-          <button class="action btn-secondary" style="height:38px;padding:0 12px;font-size:12px" onclick="saveManualPulses()">Aplicar</button>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          <label style="font-size:13px;color:var(--muted);white-space:nowrap">Ajuste Manual:</label>
+          <input type="number" id="cfgManualPulses" style="flex:1;min-width:70px;max-width:120px;height:38px;padding:0 8px;font-size:13px;box-sizing:border-box" step="1" min="50" max="2500" value="450">
+          <span style="font-size:12px;color:var(--muted)">p/L</span>
+          <button class="action btn-secondary" style="height:38px;padding:0 14px;font-size:12px;white-space:nowrap" onclick="saveManualPulses()">Aplicar</button>
         </div>
         <button class="action btn-secondary" style="width:100%;height:38px;font-size:12px;color:var(--muted)" onclick="resetFactoryCalib()">🔄 Restaurar Padrão de Fábrica (450.0 pulsos/L)</button>
         <div id="calibSuccessMsg" style="font-size:12px;text-align:center;margin-top:8px;color:var(--ok);display:none">Calibração salva com sucesso!</div>
