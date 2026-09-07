@@ -26,7 +26,7 @@ const uint16_t HTTP_PORT      = 80;
 
 // Valores padrão
 const float CALIBRACAO_PADRAO_PULSOS_L = 450.0f; // Fator do ZJ-S201
-const float TARIFA_PADRAO_M3           = 12.50f; // R$ 12,50 por m³ (água + esgoto)
+const float TARIFA_PADRAO_M3           = 13.43f; // R$ 13,43 por m³ (EMBASA Bahia: água + 80% esgoto ref. média)
 
 // Capacidade do buffer de histórico
 const uint8_t MAX_HISTORICO = 8;

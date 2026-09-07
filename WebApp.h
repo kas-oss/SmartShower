@@ -53,7 +53,7 @@ header{
 }
 .nav-btn{
   flex:1;background:transparent;color:var(--muted);border:none;border-radius:10px;
-  padding:10px 4px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;
+  padding:9px 2px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;
 }
 .nav-btn.active{background:var(--card);color:var(--text);box-shadow:0 3px 12px rgba(0,0,0,.25)}
 .tab-content{display:none}
@@ -180,6 +180,49 @@ button:disabled{opacity:.4;cursor:not-allowed}
   border-radius:12px;padding:12px;margin-top:12px;text-align:center;display:none;
 }
 .calib-result.show{display:block}
+/* Concessionárias & Fatura */
+.select-styled{
+  width:100%;height:42px;background:var(--card-inner);border:1px solid var(--border);
+  border-radius:10px;color:var(--text);font-size:13px;font-weight:700;padding:0 10px;outline:none;
+}
+.select-styled:focus{border-color:var(--accent)}
+.select-styled option{background:var(--card);color:var(--text)}
+.bill-hero{
+  background:linear-gradient(135deg,rgba(56,189,248,.12) 0%,rgba(16,29,48,1) 100%);
+  border:1px solid rgba(56,189,248,.3);text-align:center;padding:18px 14px;border-radius:var(--radius);
+  margin-bottom:14px;position:relative;
+}
+.bill-amount{font-size:36px;font-weight:900;color:var(--ok);line-height:1.1;margin:6px 0}
+.bill-subtitle{font-size:12px;color:var(--muted);line-height:1.4}
+.bill-badge{
+  display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;
+  background:rgba(56,189,248,.2);color:var(--accent);border:1px solid rgba(56,189,248,.4);margin-bottom:6px;
+}
+.bill-split{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 0}
+.bill-split-box{
+  background:var(--card-inner);border:1px solid var(--border);border-radius:10px;padding:8px 6px;text-align:center;
+}
+.bill-split-box small{display:block;font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px}
+.bill-split-box strong{font-size:14px;color:var(--text);font-weight:800}
+.tier-meter-track{height:10px;background:rgba(255,255,255,.07);border-radius:999px;overflow:hidden;margin:10px 0 6px;position:relative}
+.tier-meter-fill{height:100%;background:linear-gradient(90deg,var(--ok) 0%,var(--warn) 70%,var(--danger) 100%);transition:width .4s}
+.tier-info-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.tip-box{
+  background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:12px;
+  padding:12px;margin-top:10px;font-size:12px;line-height:1.5;color:#fef08a;
+}
+.tip-box strong{color:#fbbf24}
+.bill-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px}
+.bill-table th{text-align:left;color:var(--muted);padding:6px 4px;border-bottom:1px solid var(--border);font-weight:600}
+.bill-table td{padding:7px 4px;border-bottom:1px solid rgba(255,255,255,.05);color:var(--text)}
+.bill-table tr.active-tier{background:rgba(56,189,248,.12);color:var(--accent);font-weight:700}
+.bill-table .num{text-align:right}
+.sub-panel{background:var(--card-inner);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px}
+.tab-sub-btn{
+  flex:1;background:transparent;border:none;color:var(--muted);padding:8px 4px;font-size:12px;
+  font-weight:700;border-radius:8px;cursor:pointer;transition:all .15s;
+}
+.tab-sub-btn.active{background:var(--card);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.2)}
 </style>
 </head>
 <body>
@@ -190,9 +233,10 @@ button:disabled{opacity:.4;cursor:not-allowed}
   </header>
 
   <nav class="nav-tabs">
-    <button class="nav-btn active" onclick="switchTab('tabLive')">🚿 Banho</button>
-    <button class="nav-btn" onclick="switchTab('tabHistory')">📊 Histórico</button>
-    <button class="nav-btn" onclick="switchTab('tabConfig')">⚙️ Ajustes</button>
+    <button class="nav-btn active" onclick="switchTab('tabLive', this)">🚿 Banho</button>
+    <button class="nav-btn" onclick="switchTab('tabHistory', this)">📊 Histórico</button>
+    <button class="nav-btn" onclick="switchTab('tabBilling', this)">💰 Fatura</button>
+    <button class="nav-btn" onclick="switchTab('tabConfig', this)">⚙️ Ajustes</button>
   </nav>
 
   <!-- ABA 1: BANHO AO VIVO & CONTROLE -->
@@ -311,12 +355,223 @@ button:disabled{opacity:.4;cursor:not-allowed}
     </div>
   </section>
 
-  <!-- ABA 3: AJUSTES -->
+  <!-- ABA 3: FATURA & CONCESSIONÁRIA (EMBASA) -->
+  <section id="tabBilling" class="tab-content">
+    
+    <!-- CARD: SELEÇÃO DA CONCESSIONÁRIA & ESGOTO -->
+    <div class="card">
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>Concessionária de Água</span>
+        <button type="button" class="btn-secondary" style="height:26px;padding:0 8px;font-size:11px;border-radius:6px" onclick="toggleCustomCompanyForm()">+ Personalizada</button>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600">Empresa / Concessionária Ativa:</label>
+        <select id="selConcessionaire" class="select-styled" onchange="onCompanySelectChange()">
+          <!-- Preenchido dinamicamente via JavaScript -->
+        </select>
+        <div id="companyDesc" style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.3"></div>
+      </div>
+
+      <!-- FORMULÁRIO DE CONCESSIONÁRIA PERSONALIZADA (EXPANSÍVEL) -->
+      <div id="boxCustomCompany" class="sub-panel" style="display:none">
+        <div style="font-size:13px;font-weight:800;color:var(--accent);margin-bottom:10px">➕ Cadastrar Concessionária Personalizada</div>
+        <div style="margin-bottom:8px">
+          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Nome da Concessionária:</label>
+          <input type="text" id="custCompName" class="stepper-input" style="height:36px;text-align:left;font-size:13px;width:100%" placeholder="Ex: SAAEB / Sabesp / Copasa">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Consumo Mínimo (m³):</label>
+            <input type="number" id="custCompMinM3" class="stepper-input" style="height:36px;font-size:13px;width:100%" value="6">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Tarifa Mínima Água (R$):</label>
+            <input type="number" id="custCompMinCost" class="stepper-input" style="height:36px;font-size:13px;width:100%" value="44.77" step="0.01">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Taxa Esgoto Padrão (%):</label>
+            <input type="number" id="custCompSewage" class="stepper-input" style="height:36px;font-size:13px;width:100%" value="80">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Tarifa Faixa 2 (>6 a 10m³):</label>
+            <input type="number" id="custCompTier2" class="stepper-input" style="height:36px;font-size:13px;width:100%" value="8.85" step="0.01">
+          </div>
+        </div>
+        <div class="btn-grid" style="grid-template-columns:1fr 1fr;gap:8px">
+          <button type="button" class="action btn-primary" style="height:36px;font-size:12px" onclick="saveCustomCompany()">Salvar Empresa</button>
+          <button type="button" class="action btn-secondary" style="height:36px;font-size:12px" onclick="toggleCustomCompanyForm(false)">Cancelar</button>
+        </div>
+      </div>
+
+      <!-- SELETOR DA TAXA DE ESGOTO -->
+      <div style="margin-top:10px">
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600">Serviço de Esgotamento Sanitário:</label>
+        <div class="chip-group" id="sewageChipGroup">
+          <div class="chip active" onclick="setSewagePct(80)">80% (Padrão Embasa)</div>
+          <div class="chip" onclick="setSewagePct(40)">40% (Decisão Judicial)</div>
+          <div class="chip" onclick="setSewagePct(0)">0% (Sem Rede / Fossa)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ESTIMATIVA DA CONTA (CARD HERO) -->
+    <div class="bill-hero">
+      <div id="billCompBadge" class="bill-badge">EMBASA • Residencial</div>
+      <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Estimativa da Conta Mensal</div>
+      <div id="billTotalAmount" class="bill-amount">R$ 0,00</div>
+      <div id="billSubtitle" class="bill-subtitle">Calculado para 0 m³ de consumo no mês</div>
+
+      <div class="bill-split">
+        <div class="bill-split-box">
+          <small>💧 Água</small>
+          <strong id="billWaterVal">R$ 0,00</strong>
+        </div>
+        <div class="bill-split-box">
+          <small>🧪 Esgoto (<span id="billSewagePctText">80%</span>)</small>
+          <strong id="billSewageVal">R$ 0,00</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- TERMÔMETRO DE FAIXA PROGRESSIVA -->
+    <div class="card">
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>Faixa Tarifária Atual</span>
+        <span id="tierBadge" style="color:var(--accent);font-size:12px;font-weight:800">Faixa 1 (0 a 6 m³)</span>
+      </div>
+
+      <div class="tier-meter-track">
+        <div id="tierMeterFill" class="tier-meter-fill" style="width:50%"></div>
+      </div>
+      <div class="tier-info-row">
+        <span id="tierMeterMin">0 m³</span>
+        <span id="tierMeterCurrent" style="font-weight:700;color:var(--text)">Consumo: 6.0 m³</span>
+        <span id="tierMeterMax">10 m³</span>
+      </div>
+
+      <div id="tierAlertBox" class="tip-box">
+        💡 <strong>Fique atento:</strong> Faltam <strong>2.0 m³ (2.000 L)</strong> para mudar de faixa tarifária.
+      </div>
+    </div>
+
+    <!-- SIMULADOR & MEDIÇÃO RESIDENCIAL -->
+    <div class="card">
+      <div class="section-title">Medição & Perfil da Casa</div>
+
+      <!-- Segmented Control para o modo de simulação -->
+      <div style="display:flex;background:var(--card-inner);border:1px solid var(--border);border-radius:10px;padding:3px;gap:4px;margin-bottom:14px">
+        <button type="button" id="btnSimModeHouse" class="tab-sub-btn active" onclick="setSimMode('house')">🏡 Perfil da Família</button>
+        <button type="button" id="btnSimModeDirect" class="tab-sub-btn" onclick="setSimMode('direct')">🚰 Hidrômetro (m³)</button>
+      </div>
+
+      <!-- MODO 1: PERFIL DA FAMÍLIA -->
+      <div id="boxSimHouse">
+        <div class="input-row">
+          <label>Moradores:</label>
+          <div class="stepper-row" style="flex:1;margin-bottom:0">
+            <button type="button" class="stepper-btn" style="height:36px;width:36px" onclick="stepResidents(-1)">−</button>
+            <input type="number" id="inpResidents" class="stepper-input" style="height:36px" value="3" min="1" max="15" oninput="recalcBill()">
+            <span class="stepper-unit">pessoas</span>
+            <button type="button" class="stepper-btn" style="height:36px;width:36px" onclick="stepResidents(1)">+</button>
+          </div>
+        </div>
+
+        <div class="input-row">
+          <label>Banhos/dia:</label>
+          <div class="stepper-row" style="flex:1;margin-bottom:0">
+            <button type="button" class="stepper-btn" style="height:36px;width:36px" onclick="stepDailyBaths(-1)">−</button>
+            <input type="number" id="inpDailyBaths" class="stepper-input" style="height:36px" value="1" min="1" max="5" oninput="recalcBill()">
+            <span class="stepper-unit">por pessoa</span>
+            <button type="button" class="stepper-btn" style="height:36px;width:36px" onclick="stepDailyBaths(1)">+</button>
+          </div>
+        </div>
+
+        <div class="input-row">
+          <label>Média Banho:</label>
+          <div style="display:flex;align-items:center;gap:6px;flex:1">
+            <input type="number" id="inpHouseAvgShower" class="stepper-input" style="height:36px;flex:1" value="32" min="5" max="250" oninput="recalcBill()">
+            <span class="stepper-unit">L</span>
+            <button type="button" class="btn-secondary" style="height:36px;font-size:11px;padding:0 8px;border-radius:8px;white-space:nowrap" onclick="useSmartShowerAvg()">🔄 Média Real</button>
+          </div>
+        </div>
+
+        <div style="margin-top:10px">
+          <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px">Participação do Chuveiro no Total da Casa:</label>
+          <div class="chip-group" id="showerWeightGroup">
+            <div class="chip" onclick="setShowerWeight(30)">30%</div>
+            <div class="chip active" onclick="setShowerWeight(40)">40% (Média Nacional)</div>
+            <div class="chip" onclick="setShowerWeight(50)">50%</div>
+          </div>
+        </div>
+
+        <div class="cost-helper" id="houseSimHelper" style="margin-top:10px">
+          🚿 Banhos: <strong>2.880 L/mês</strong> • Casa toda: <strong>~7,20 m³ (7.200 L)</strong>
+        </div>
+      </div>
+
+      <!-- MODO 2: SIMULAÇÃO DIRETA (M³) -->
+      <div id="boxSimDirect" style="display:none">
+        <div class="chip-group">
+          <div class="chip" onclick="setDirectM3(5)">5 m³ (Mín.)</div>
+          <div class="chip" onclick="setDirectM3(8)">8 m³</div>
+          <div class="chip active" onclick="setDirectM3(12)">12 m³</div>
+          <div class="chip" onclick="setDirectM3(18)">18 m³</div>
+          <div class="chip" onclick="setDirectM3(25)">25 m³</div>
+          <div class="chip" onclick="setDirectM3(35)">35 m³</div>
+        </div>
+
+        <div class="stepper-row" style="margin-top:10px">
+          <button type="button" class="stepper-btn" onclick="stepDirectM3(-1)">−</button>
+          <input type="number" id="inpDirectM3" class="stepper-input" value="12" min="1" max="500" step="0.5" oninput="recalcBill()">
+          <span class="stepper-unit">m³</span>
+          <button type="button" class="stepper-btn" onclick="stepDirectM3(1)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXTRATO DETALHADO POR FAIXAS -->
+    <div class="card">
+      <div class="section-title">Extrato Detalhado da Tarifa</div>
+      <table class="bill-table">
+        <thead>
+          <tr>
+            <th>Faixa</th>
+            <th class="num">Volume</th>
+            <th class="num">Tarifa</th>
+            <th class="num">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody id="billTableBody">
+          <!-- Gerado dinamicamente -->
+        </tbody>
+      </table>
+
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+        <button type="button" class="action btn-primary" style="width:100%" onclick="syncTariffWithArduino()">
+          ⚡ Sincronizar Tarifa com SmartShower
+        </button>
+        <div id="billSyncMsg" style="font-size:12px;text-align:center;margin-top:8px;color:var(--ok);display:none">
+          Tarifa sincronizada com o chuveiro com sucesso!
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ABA 4: AJUSTES -->
   <section id="tabConfig" class="tab-content">
     <!-- TARIFA DE ÁGUA -->
     <div class="card">
       <div class="section-title">Tarifa de Água & Esgoto</div>
       
+      <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--muted)">Empresa: <strong id="cfgActiveCompName" style="color:var(--accent)">EMBASA</strong></span>
+        <button type="button" class="btn-secondary" style="height:26px;padding:0 8px;font-size:11px;border-radius:6px;cursor:pointer" onclick="switchTab('tabBilling')">Regras & Faixas ↗</button>
+      </div>
+
       <div style="margin-bottom:12px">
         <label style="display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600">Valor da Tarifa por m³:</label>
         <div class="input-currency">
@@ -405,12 +660,16 @@ let calibTimer = null;
 let calculatedFactor = 450.0;
 let audioCtx = null;
 
-function switchTab(tabId){
+function switchTab(tabId, el){
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-  event.target.classList.add('active');
+  const targetTab = document.getElementById(tabId);
+  if(targetTab) targetTab.classList.add('active');
+  let targetBtn = el || (typeof event !== 'undefined' && event && event.currentTarget ? event.currentTarget : null);
+  if(!targetBtn) targetBtn = document.querySelector(`.nav-btn[onclick*="${tabId}"]`);
+  if(targetBtn) targetBtn.classList.add('active');
   if(tabId==='tabHistory') fetchHistory();
+  if(tabId==='tabBilling') initBilling();
   if(tabId==='tabConfig') fetchConfig();
 }
 
@@ -596,6 +855,9 @@ async function fetchConfig(){
     document.getElementById('curPulsesDisplay').textContent = p + ' pulsos/L';
     document.getElementById('cfgManualPulses').value = Math.round(Number(cfg.pulsosL || 450));
     updateTariffHelper();
+    let comp = getActiveCompany();
+    let nameEl = document.getElementById('cfgActiveCompName');
+    if(nameEl && comp) nameEl.textContent = comp.name;
   }catch(e){}
 }
 
@@ -782,6 +1044,461 @@ async function poll(){
     const badge = document.getElementById('statusBadge');
     badge.textContent = '● Sem resposta';
     badge.classList.add('offline');
+  }
+}
+
+// ======================================================
+// CONCESSIONÁRIAS DE ÁGUA E ESTIMADOR MENSAL (EMBASA)
+// ======================================================
+const PRESET_COMPANIES = [
+  {
+    id: 'embasa_normal',
+    name: 'EMBASA - Residencial Normal (Bahia)',
+    desc: 'Regra EMBASA: 0 a 6 m³ fixo (R$ 44,77) + excedente progressivo por faixas + 80% esgoto.',
+    minM3: 6,
+    minCost: 44.77,
+    sewagePct: 80,
+    tiers: [
+      { max: 6, rate: 0.0, label: '0 a 6 m³ (Mínimo Fixo)' },
+      { max: 10, rate: 8.85, label: '7 a 10 m³' },
+      { max: 15, rate: 11.20, label: '11 a 15 m³' },
+      { max: 20, rate: 13.80, label: '16 a 20 m³' },
+      { max: 30, rate: 16.90, label: '21 a 30 m³' },
+      { max: 50, rate: 20.40, label: '31 a 50 m³' },
+      { max: 9999, rate: 24.10, label: 'Acima de 50 m³' }
+    ]
+  },
+  {
+    id: 'embasa_social',
+    name: 'EMBASA - Residencial Social',
+    desc: 'Regra EMBASA: CadÚnico / Baixa Renda. Mínimo 0 a 6 m³ (R$ 16,28) + 80% esgoto.',
+    minM3: 6,
+    minCost: 16.28,
+    sewagePct: 80,
+    tiers: [
+      { max: 6, rate: 0.0, label: '0 a 6 m³ (Mínimo Fixo)' },
+      { max: 10, rate: 4.40, label: '7 a 10 m³' },
+      { max: 15, rate: 7.80, label: '11 a 15 m³' },
+      { max: 20, rate: 11.50, label: '16 a 20 m³' },
+      { max: 9999, rate: 15.20, label: 'Acima de 20 m³' }
+    ]
+  },
+  {
+    id: 'embasa_comercial',
+    name: 'EMBASA - Comercial',
+    desc: 'Regra EMBASA: Comércio e Serviços. Mínimo 0 a 6 m³ (R$ 74,50) + 80% esgoto.',
+    minM3: 6,
+    minCost: 74.50,
+    sewagePct: 80,
+    tiers: [
+      { max: 6, rate: 0.0, label: '0 a 6 m³ (Mínimo Fixo)' },
+      { max: 10, rate: 12.30, label: '7 a 10 m³' },
+      { max: 20, rate: 16.80, label: '11 a 20 m³' },
+      { max: 50, rate: 21.90, label: '21 a 50 m³' },
+      { max: 9999, rate: 26.50, label: 'Acima de 50 m³' }
+    ]
+  }
+];
+
+let activeCompanyId = 'embasa_normal';
+let activeSewagePct = 80;
+let simMode = 'house';
+let showerWeightPct = 40;
+let lastCalculatedEffectiveRate = 13.43;
+
+function getCustomCompanies(){
+  try{
+    return JSON.parse(localStorage.getItem('smartshower_custom_companies') || '[]');
+  }catch(e){ return []; }
+}
+
+function saveCustomCompanies(list){
+  try{
+    localStorage.setItem('smartshower_custom_companies', JSON.stringify(list));
+  }catch(e){}
+}
+
+function getAllCompanies(){
+  return PRESET_COMPANIES.concat(getCustomCompanies());
+}
+
+function getActiveCompany(){
+  let all = getAllCompanies();
+  return all.find(c => c.id === activeCompanyId) || all[0];
+}
+
+function initBilling(){
+  activeCompanyId = localStorage.getItem('smartshower_active_company_id') || 'embasa_normal';
+  let savedSewage = localStorage.getItem('smartshower_sewage_pct');
+  if(savedSewage !== null) activeSewagePct = parseInt(savedSewage);
+  populateCompanySelect();
+  updateSewageChips();
+  recalcBill();
+}
+
+function populateCompanySelect(){
+  const sel = document.getElementById('selConcessionaire');
+  if(!sel) return;
+  sel.innerHTML = '';
+  let all = getAllCompanies();
+  all.forEach(c => {
+    let opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.name;
+    if(c.id === activeCompanyId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  updateCompanyDesc();
+}
+
+function updateCompanyDesc(){
+  const c = getActiveCompany();
+  const descEl = document.getElementById('companyDesc');
+  const badgeEl = document.getElementById('billCompBadge');
+  if(descEl) descEl.textContent = c.desc || '';
+  if(badgeEl) badgeEl.textContent = c.name;
+}
+
+function onCompanySelectChange(){
+  activeCompanyId = document.getElementById('selConcessionaire').value;
+  localStorage.setItem('smartshower_active_company_id', activeCompanyId);
+  const comp = getActiveCompany();
+  setSewagePct(comp.sewagePct || 80);
+  updateCompanyDesc();
+  recalcBill();
+}
+
+function toggleCustomCompanyForm(show){
+  const box = document.getElementById('boxCustomCompany');
+  if(!box) return;
+  if(show === undefined) show = (box.style.display === 'none');
+  box.style.display = show ? 'block' : 'none';
+}
+
+function saveCustomCompany(){
+  let name = (document.getElementById('custCompName').value || '').trim();
+  let minM3 = parseFloat(document.getElementById('custCompMinM3').value) || 6;
+  let minCost = parseFloat(document.getElementById('custCompMinCost').value) || 40.0;
+  let sewage = parseFloat(document.getElementById('custCompSewage').value) || 80;
+  let tier2Rate = parseFloat(document.getElementById('custCompTier2').value) || 8.0;
+
+  if(!name){
+    alert('Por favor, informe o nome da concessionária.');
+    return;
+  }
+
+  let customId = 'custom_' + Date.now();
+  let newComp = {
+    id: customId,
+    name: name + ' (Personalizada)',
+    desc: `Tarifa customizada: Mínimo ${minM3} m³ (R$ ${minCost.toFixed(2)}) + ${sewage}% esgoto.`,
+    minM3: minM3,
+    minCost: minCost,
+    sewagePct: sewage,
+    tiers: [
+      { max: minM3, rate: 0.0, label: `0 a ${minM3} m³ (Mínimo Fixo)` },
+      { max: minM3 + 4, rate: tier2Rate, label: `${minM3 + 1} a ${minM3 + 4} m³` },
+      { max: minM3 + 9, rate: tier2Rate * 1.3, label: `${minM3 + 5} a ${minM3 + 9} m³` },
+      { max: 9999, rate: tier2Rate * 1.7, label: `Acima de ${minM3 + 9} m³` }
+    ]
+  };
+
+  let list = getCustomCompanies();
+  list.push(newComp);
+  saveCustomCompanies(list);
+
+  activeCompanyId = customId;
+  localStorage.setItem('smartshower_active_company_id', activeCompanyId);
+  populateCompanySelect();
+  toggleCustomCompanyForm(false);
+  setSewagePct(sewage);
+  recalcBill();
+}
+
+function setSewagePct(pct){
+  activeSewagePct = pct;
+  localStorage.setItem('smartshower_sewage_pct', pct);
+  updateSewageChips();
+  recalcBill();
+}
+
+function updateSewageChips(){
+  document.querySelectorAll('#sewageChipGroup .chip').forEach(c => {
+    let val = parseInt(c.textContent) || 0;
+    c.classList.toggle('active', val === activeSewagePct);
+  });
+  const sewagePctText = document.getElementById('billSewagePctText');
+  if(sewagePctText) sewagePctText.textContent = activeSewagePct + '%';
+}
+
+function setSimMode(mode){
+  simMode = mode;
+  document.getElementById('btnSimModeHouse').classList.toggle('active', mode === 'house');
+  document.getElementById('btnSimModeDirect').classList.toggle('active', mode === 'direct');
+  document.getElementById('boxSimHouse').style.display = (mode === 'house') ? 'block' : 'none';
+  document.getElementById('boxSimDirect').style.display = (mode === 'direct') ? 'block' : 'none';
+  recalcBill();
+}
+
+function stepResidents(delta){
+  const inp = document.getElementById('inpResidents');
+  let val = Math.max(1, Math.min(15, (parseInt(inp.value)||3) + delta));
+  inp.value = val;
+  recalcBill();
+}
+
+function stepDailyBaths(delta){
+  const inp = document.getElementById('inpDailyBaths');
+  let val = Math.max(1, Math.min(5, (parseInt(inp.value)||1) + delta));
+  inp.value = val;
+  recalcBill();
+}
+
+async function useSmartShowerAvg(){
+  try{
+    let curAvgStr = document.getElementById('histAvg').textContent;
+    let avg = parseFloat(curAvgStr);
+    if(isNaN(avg) || avg <= 0){
+      const data = await api('/api/history');
+      if(data.itens && data.itens.length > 0){
+        let sum = 0;
+        data.itens.forEach(i => sum += Number(i.liters));
+        avg = sum / data.itens.length;
+      }
+    }
+    if(!isNaN(avg) && avg > 0){
+      document.getElementById('inpHouseAvgShower').value = Math.round(avg);
+      recalcBill();
+    } else {
+      alert('Nenhum banho registrado no SmartShower ainda. O valor de 32L foi mantido.');
+    }
+  }catch(e){
+    alert('Não foi possível obter a média do histórico.');
+  }
+}
+
+function setShowerWeight(w){
+  showerWeightPct = w;
+  document.querySelectorAll('#showerWeightGroup .chip').forEach(c => {
+    c.classList.toggle('active', parseInt(c.textContent) === w);
+  });
+  recalcBill();
+}
+
+function setDirectM3(m3){
+  document.getElementById('inpDirectM3').value = m3;
+  document.querySelectorAll('#boxSimDirect .chip').forEach(c => {
+    c.classList.toggle('active', parseFloat(c.textContent) === m3);
+  });
+  recalcBill();
+}
+
+function stepDirectM3(delta){
+  const inp = document.getElementById('inpDirectM3');
+  let val = Math.max(1, Math.min(500, (parseFloat(inp.value)||12) + delta));
+  inp.value = val;
+  document.querySelectorAll('#boxSimDirect .chip').forEach(c => {
+    c.classList.toggle('active', parseFloat(c.textContent) === val);
+  });
+  recalcBill();
+}
+
+function calculateBill(volM3, company, sewagePct){
+  let vol = Math.max(0, parseFloat(volM3) || 0);
+  let pctEsgoto = (sewagePct !== undefined) ? sewagePct : company.sewagePct;
+
+  let waterCost = company.minCost;
+  let breakdown = [];
+
+  let volMin = company.minM3;
+  breakdown.push({
+    label: company.tiers[0].label,
+    volInTier: volMin,
+    volBilled: Math.min(vol, volMin),
+    rate: (company.minCost / volMin),
+    subtotal: company.minCost,
+    isMin: true,
+    isActive: (vol <= volMin)
+  });
+
+  let currentTierIndex = 0;
+  let currentTierLabel = company.tiers[0].label;
+  let tierLower = 0;
+  let tierUpper = volMin;
+  let nextTierThreshold = volMin;
+  let nextTierRate = (company.tiers.length > 1) ? company.tiers[1].rate : 0;
+
+  if(vol > volMin){
+    for(let i = 1; i < company.tiers.length; i++){
+      let prevMax = company.tiers[i - 1].max;
+      let currMax = company.tiers[i].max;
+
+      if(vol > prevMax){
+        let volInTier = Math.min(vol, currMax) - prevMax;
+        let subtotal = volInTier * company.tiers[i].rate;
+        waterCost += subtotal;
+
+        let isActive = (vol <= currMax || i === company.tiers.length - 1);
+        if(isActive){
+          currentTierIndex = i;
+          currentTierLabel = company.tiers[i].label;
+          tierLower = prevMax;
+          tierUpper = currMax;
+          if(i + 1 < company.tiers.length){
+            nextTierThreshold = currMax;
+            nextTierRate = company.tiers[i + 1].rate;
+          } else {
+            nextTierThreshold = 9999;
+            nextTierRate = company.tiers[i].rate;
+          }
+        }
+
+        breakdown.push({
+          label: company.tiers[i].label,
+          volInTier: (currMax < 9000 ? (currMax - prevMax) : 'Exced.'),
+          volBilled: volInTier,
+          rate: company.tiers[i].rate,
+          subtotal: subtotal,
+          isMin: false,
+          isActive: isActive
+        });
+      }
+    }
+  }
+
+  let sewageCost = waterCost * (pctEsgoto / 100.0);
+  let totalCost = waterCost + sewageCost;
+  let effectiveRate = (vol > 0) ? (totalCost / vol) : (totalCost / volMin);
+
+  return {
+    vol: vol,
+    waterCost: waterCost,
+    sewageCost: sewageCost,
+    totalCost: totalCost,
+    effectiveRate: effectiveRate,
+    breakdown: breakdown,
+    currentTierIndex: currentTierIndex,
+    currentTierLabel: currentTierLabel,
+    tierLower: tierLower,
+    tierUpper: tierUpper,
+    nextTierThreshold: nextTierThreshold,
+    nextTierRate: nextTierRate,
+    remainingToNext: (nextTierThreshold < 9000) ? Math.max(0, nextTierThreshold - vol) : 0
+  };
+}
+
+function recalcBill(){
+  const comp = getActiveCompany();
+  let estimatedM3 = 0;
+
+  if(simMode === 'house'){
+    let residents = parseInt(document.getElementById('inpResidents').value) || 3;
+    let baths = parseInt(document.getElementById('inpDailyBaths').value) || 1;
+    let avgLiters = parseFloat(document.getElementById('inpHouseAvgShower').value) || 32;
+
+    let showerLMonth = residents * baths * 30 * avgLiters;
+    let totalHouseL = showerLMonth / (showerWeightPct / 100.0);
+    estimatedM3 = totalHouseL / 1000.0;
+
+    const simHelper = document.getElementById('houseSimHelper');
+    if(simHelper){
+      simHelper.innerHTML = `🚿 Banhos: <strong>${Math.round(showerLMonth).toLocaleString('pt-BR')} L/mês</strong> • Casa toda: <strong>~${estimatedM3.toFixed(2).replace('.', ',')} m³ (${Math.round(totalHouseL).toLocaleString('pt-BR')} L)</strong>`;
+    }
+  } else {
+    estimatedM3 = parseFloat(document.getElementById('inpDirectM3').value) || 12;
+  }
+
+  const bill = calculateBill(estimatedM3, comp, activeSewagePct);
+  lastCalculatedEffectiveRate = bill.effectiveRate;
+
+  // Atualiza Hero Card
+  document.getElementById('billTotalAmount').textContent = 'R$ ' + bill.totalCost.toFixed(2).replace('.', ',');
+  document.getElementById('billSubtitle').innerHTML = 
+    `Calculado para <strong>${bill.vol.toFixed(1).replace('.', ',')} m³</strong> no mês (tarifa média R$ ${bill.effectiveRate.toFixed(2).replace('.', ',')}/m³)`;
+  document.getElementById('billWaterVal').textContent = 'R$ ' + bill.waterCost.toFixed(2).replace('.', ',');
+  document.getElementById('billSewageVal').textContent = 'R$ ' + bill.sewageCost.toFixed(2).replace('.', ',');
+
+  // Atualiza Termômetro de Faixa
+  document.getElementById('tierBadge').textContent = bill.currentTierLabel;
+  document.getElementById('tierMeterCurrent').textContent = `Consumo: ${bill.vol.toFixed(1)} m³`;
+  document.getElementById('tierMeterMin').textContent = `${bill.tierLower} m³`;
+  document.getElementById('tierMeterMax').textContent = (bill.tierUpper < 9000 ? `${bill.tierUpper} m³` : 'Max');
+
+  let pctInTier = 100;
+  if(bill.tierUpper < 9000){
+    let span = bill.tierUpper - bill.tierLower;
+    let pos = bill.vol - bill.tierLower;
+    pctInTier = Math.min(100, Math.max(0, (pos / span) * 100));
+  }
+  document.getElementById('tierMeterFill').style.width = pctInTier + '%';
+
+  const alertBox = document.getElementById('tierAlertBox');
+  if(bill.remainingToNext > 0){
+    let remLitros = Math.round(bill.remainingToNext * 1000);
+    alertBox.innerHTML = `
+      ⚠️ <strong>Atenção à faixa:</strong> Faltam apenas <strong>${bill.remainingToNext.toFixed(1).replace('.', ',')} m³ (${remLitros} Litros)</strong> para entrar na próxima faixa mais cara (R$ ${bill.nextTierRate.toFixed(2).replace('.', ',')}/m³)!<br>
+      💡 <em>Economizando 2 minutos de cada banho diário, sua casa evita subir de faixa tarifária.</em>
+    `;
+    alertBox.style.display = 'block';
+  } else {
+    alertBox.innerHTML = `
+      💡 <strong>Faixa Superior:</strong> Sua residência já atingiu as faixas com tarifa de água de maior valor. Cada litro economizado no banho gera a máxima economia na conta!
+    `;
+    alertBox.style.display = 'block';
+  }
+
+  // Atualiza Tabela de Extrato
+  const tbody = document.getElementById('billTableBody');
+  if(tbody){
+    let rowsHtml = '';
+    bill.breakdown.forEach(item => {
+      let activeClass = item.isActive ? ' class="active-tier"' : '';
+      let rateStr = item.isMin ? 'Fixo' : ('R$ ' + item.rate.toFixed(2).replace('.', ','));
+      let volStr = item.isMin ? `${item.volInTier} m³` : `${item.volBilled.toFixed(1).replace('.', ',')} m³`;
+      rowsHtml += `
+        <tr${activeClass}>
+          <td>${item.label}</td>
+          <td class="num">${volStr}</td>
+          <td class="num">${rateStr}</td>
+          <td class="num">R$ ${item.subtotal.toFixed(2).replace('.', ',')}</td>
+        </tr>
+      `;
+    });
+
+    // Linha do Esgoto
+    rowsHtml += `
+      <tr style="border-top:1px solid var(--border)">
+        <td>🧪 Esgotamento Sanitário (${bill.pctEsgoto}%)</td>
+        <td class="num">--</td>
+        <td class="num">${bill.pctEsgoto}%</td>
+        <td class="num">R$ ${bill.sewageCost.toFixed(2).replace('.', ',')}</td>
+      </tr>
+      <tr style="font-weight:900;color:var(--ok);border-top:2px solid var(--border)">
+        <td>TOTAL ESTIMADO</td>
+        <td class="num">${bill.vol.toFixed(1).replace('.', ',')} m³</td>
+        <td class="num">--</td>
+        <td class="num">R$ ${bill.totalCost.toFixed(2).replace('.', ',')}</td>
+      </tr>
+    `;
+    tbody.innerHTML = rowsHtml;
+  }
+}
+
+async function syncTariffWithArduino(){
+  try{
+    let rate = lastCalculatedEffectiveRate || 13.43;
+    await api(`/api/config?tariff=${rate.toFixed(2)}`, {method:'POST'});
+    
+    // Atualiza campo na aba de ajustes
+    let cfgTariffInp = document.getElementById('cfgTariff');
+    if(cfgTariffInp) cfgTariffInp.value = rate.toFixed(2).replace('.', ',');
+    updateTariffHelper();
+
+    const msg = document.getElementById('billSyncMsg');
+    msg.style.display = 'block';
+    setTimeout(() => msg.style.display = 'none', 3500);
+  }catch(e){
+    alert('Erro ao sincronizar tarifa com o SmartShower.');
   }
 }
 
