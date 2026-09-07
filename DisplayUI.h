@@ -108,7 +108,9 @@ private:
         _session.setMetaLitros(_session.getMetaLitros() + 5.0f);
       }
       if (botaoPressionado(PIN_BTN_DOWN)) {
-        _session.setMetaLitros(_session.getMetaLitros() - 5.0f);
+        float nova = _session.getMetaLitros() - 5.0f;
+        if (nova < 1.0f) nova = 1.0f;
+        _session.setMetaLitros(nova);
       }
       if (botaoPressionado(PIN_BTN_OK)) {
         _emAjuste = false;

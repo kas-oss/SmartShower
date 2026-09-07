@@ -215,6 +215,8 @@ public:
     else if (requestLine.startsWith("POST /api/config")) {
       String tariffStr = obterParametro(requestLine, "tariff");
       String pulsesStr = obterParametro(requestLine, "pulses");
+      tariffStr.replace(',', '.');
+      pulsesStr.replace(',', '.');
       float t = tariffStr.length() > 0 ? tariffStr.toFloat() : -1.0f;
       float p = pulsesStr.length() > 0 ? pulsesStr.toFloat() : -1.0f;
       _session.setConfig(t, p);
@@ -222,6 +224,37 @@ public:
       const char ok[] = "{\"ok\":true}";
       enviarCabecalho(client, "200 OK", "application/json; charset=utf-8", strlen(ok));
       client.print(ok);
+    }
+    else if (requestLine.startsWith("GET /api/calib")) {
+      char calibJson[64];
+      snprintf(
+        calibJson, sizeof(calibJson),
+        "{\"calibrating\":%s,\"pulses\":%lu}",
+        _session.isCalibrando() ? "true" : "false",
+        _session.getPulsosCalibracao()
+      );
+      enviarCabecalho(client, "200 OK", "application/json; charset=utf-8", strlen(calibJson));
+      client.print(calibJson);
+    }
+    else if (requestLine.startsWith("POST /api/calib/start")) {
+      _session.iniciarCalibracao();
+      const char ok[] = "{\"ok\":true,\"calibrating\":true}";
+      enviarCabecalho(client, "200 OK", "application/json; charset=utf-8", strlen(ok));
+      client.print(ok);
+    }
+    else if (requestLine.startsWith("POST /api/calib/stop")) {
+      unsigned long total = _session.pararCalibracao();
+      char resp[64];
+      snprintf(resp, sizeof(resp), "{\"ok\":true,\"pulses\":%lu}", total);
+      enviarCabecalho(client, "200 OK", "application/json; charset=utf-8", strlen(resp));
+      client.print(resp);
+    }
+    else if (requestLine.startsWith("POST /api/calib/reset")) {
+      _session.restaurarCalibracaoPadrao();
+      char resp[64];
+      snprintf(resp, sizeof(resp), "{\"ok\":true,\"pulsesL\":%.1f}", CALIBRACAO_PADRAO_PULSOS_L);
+      enviarCabecalho(client, "200 OK", "application/json; charset=utf-8", strlen(resp));
+      client.print(resp);
     }
     else if (requestLine.startsWith("GET / ") || requestLine.startsWith("GET /index.html")) {
       enviarCabecalho(client, "200 OK", "text/html; charset=utf-8", strlen(WEB_APP));

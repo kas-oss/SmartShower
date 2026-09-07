@@ -72,13 +72,13 @@ public:
 
   void setMetaMinutos(int min) {
     if (min < 1) min = 1;
-    if (min > 30) min = 30;
+    if (min > 60) min = 60;
     _metaMinutos = min;
   }
 
   void setMetaLitros(float l) {
-    if (l < 5.0f) l = 5.0f;
-    if (l > 150.0f) l = 150.0f;
+    if (l < 1.0f) l = 1.0f;
+    if (l > 300.0f) l = 300.0f;
     _metaLitros = l;
   }
 
@@ -91,6 +91,13 @@ public:
       _sensor.setCalibracao(pulsosPorLitro);
     }
   }
+
+  // Calibração do sensor
+  void iniciarCalibracao() { _sensor.iniciarCalibracao(); }
+  unsigned long getPulsosCalibracao() const { return _sensor.getPulsosCalibracao(); }
+  unsigned long pararCalibracao() { return _sensor.pararCalibracao(); }
+  bool isCalibrando() const { return _sensor.isCalibrando(); }
+  void restaurarCalibracaoPadrao() { setConfig(-1.0f, CALIBRACAO_PADRAO_PULSOS_L); }
 
   // Retorna o tempo decorrido ativo (descontando pausas) em segundos
   unsigned long getSegundosAtivo() const {

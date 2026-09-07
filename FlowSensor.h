@@ -9,6 +9,8 @@ private:
   unsigned long _pulsosAnteriores;
   float _vazaoAtualLMin;
   float _pulsosPorLitro;
+  unsigned long _calibPulsosInicio;
+  bool _emCalibracao;
 
   static void isrContarPulso() {
     s_pulsos++;
@@ -19,7 +21,9 @@ public:
     : _ultimoCalculoMs(0), 
       _pulsosAnteriores(0), 
       _vazaoAtualLMin(0.0f), 
-      _pulsosPorLitro(CALIBRACAO_PADRAO_PULSOS_L) {}
+      _pulsosPorLitro(CALIBRACAO_PADRAO_PULSOS_L),
+      _calibPulsosInicio(0),
+      _emCalibracao(false) {}
 
   void begin(float pulsosPorLitro = CALIBRACAO_PADRAO_PULSOS_L) {
     _pulsosPorLitro = pulsosPorLitro;
@@ -36,6 +40,27 @@ public:
 
   float getCalibracao() const {
     return _pulsosPorLitro;
+  }
+
+  void iniciarCalibracao() {
+    _calibPulsosInicio = lerPulsos();
+    _emCalibracao = true;
+  }
+
+  unsigned long getPulsosCalibracao() const {
+    if (!_emCalibracao) return 0;
+    unsigned long atual = lerPulsos();
+    return (atual >= _calibPulsosInicio) ? (atual - _calibPulsosInicio) : 0;
+  }
+
+  unsigned long pararCalibracao() {
+    unsigned long total = getPulsosCalibracao();
+    _emCalibracao = false;
+    return total;
+  }
+
+  bool isCalibrando() const {
+    return _emCalibracao;
   }
 
   void zerar() {
