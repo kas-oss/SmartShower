@@ -11,6 +11,15 @@
 * **Menu Navegável**: Navegue entre Temporizador, Contador Livre e Dicas usando botões físicos.
 * **Feedback Sonoro**: Ao final do banho, emite sons conforme seu desempenho.
 * **Interface com LCD**: Utiliza display I2C 16x2 para exibir informações.
+* **WebApp 2.0 Embarcado via Wi-Fi**: Acesso direto pelo navegador no Access Point do Arduino.
+* **Pré-Cadastro de Concessionárias (EMBASA)**:
+  - Regras oficiais da EMBASA (Bahia): mínimo fixo de 0 a 6 m³ + cobrança progressiva por faixas excedentes.
+  - Taxa de esgoto ajustável (80% padrão, 40% judicial ou 0% sem rede).
+  - Suporte ao cadastro de novas concessionárias personalizadas.
+* **Estimador de Fatura Mensal Residencial**:
+  - Projeta o consumo da casa no fim do mês a partir dos banhos reais + perfil familiar.
+  - Termômetro visual de faixa tarifária e alertas de aproximação de faixas mais caras.
+  - Sincronização instantânea da tarifa de referência calculada com o hardware.
 
 ## 🛠️ Componentes Utilizados
 
