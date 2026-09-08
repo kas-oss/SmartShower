@@ -251,6 +251,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
     <header>
     <div class="brand">&#128703; SmartShower <span>Admin</span></div>
     <div style="display:flex;align-items:center;gap:6px">
+      <div id="statusBadge" class="badge">&bull; Conectando</div>
       <a href="/" class="badge" style="text-decoration:none;background:rgba(56,189,248,.15);color:var(--accent);border-color:rgba(56,189,248,.3)">&#128214; Apresenta&ccedil;&atilde;o</a>
       <button onclick="adminLogout()" class="badge" style="background:rgba(248,113,113,.15);color:var(--danger);border-color:rgba(248,113,113,.3);cursor:pointer">&#128682; Sair</button>
     </div>
@@ -794,37 +795,55 @@ async function api(path, opts={}){
 }
 
 async function startShower(){
-  initAudio();
-  let target = 0;
-  if(currentMode === 'timer') target = document.getElementById('inpMinutes').value;
-  if(currentMode === 'liters') target = document.getElementById('inpLiters').value;
+  try{
+    initAudio();
+    let target = 0;
+    if(currentMode === 'timer') target = document.getElementById('inpMinutes').value;
+    if(currentMode === 'liters') target = document.getElementById('inpLiters').value;
 
-  await api('/api/start?mode='+currentMode+'&target='+target, {method:'POST'});
-  beep(880, 0.12);
-  poll();
+    await api('/api/start?mode='+encodeURIComponent(currentMode)+'&target='+encodeURIComponent(target), {method:'POST'});
+    beep(880, 0.12);
+    await poll();
+  }catch(e){
+    console.error('Erro ao iniciar banho:', e);
+    alert('N\u00e3o foi poss\u00edvel iniciar o banho. Verifique a conex\u00e3o.');
+  }
 }
 
 async function togglePause(){
-  initAudio();
-  await api('/api/pause', {method:'POST'});
-  beep(600, 0.1);
-  poll();
+  try{
+    initAudio();
+    await api('/api/pause', {method:'POST'});
+    beep(600, 0.1);
+    await poll();
+  }catch(e){
+    console.error('Erro ao pausar/retomar banho:', e);
+    alert('N\u00e3o foi poss\u00edvel alternar a pausa do banho.');
+  }
 }
 
 async function stopShower(){
-  initAudio();
-  await api('/api/stop', {method:'POST'});
-  beep(440, 0.15);
-  poll();
+  try{
+    initAudio();
+    await api('/api/stop', {method:'POST'});
+    beep(440, 0.15);
+    await poll();
+  }catch(e){
+    console.error('Erro ao finalizar banho:', e);
+    alert('N\u00e3o foi poss\u00edvel finalizar o banho.');
+  }
 }
 
 async function fetchHistory(){
   try{
     const data = await api('/api/history');
-    document.getElementById('histTotal').textContent = data.totalBanhos || 0;
-    document.getElementById('histRecord').textContent = (data.recorde ? Number(data.recorde).toFixed(1) : '0.0') + ' L';
+    const totalEl = document.getElementById('histTotal');
+    const recEl = document.getElementById('histRecord');
+    if(totalEl) totalEl.textContent = data.totalBanhos || 0;
+    if(recEl) recEl.textContent = (data.recorde ? Number(data.recorde).toFixed(1) : '0.0') + ' L';
 
     const list = document.getElementById('historyList');
+    if(!list) return;
     if(!data.itens || data.itens.length === 0){
       list.innerHTML = '<div class="history-empty">Nenhum banho registrado ainda.</div>';
       return;
@@ -852,8 +871,13 @@ async function fetchHistory(){
       `;
     });
     list.innerHTML = html;
-    document.getElementById('histAvg').textContent = (totalL / data.itens.length).toFixed(1) + ' L';
-  }catch(e){}
+    const avgEl = document.getElementById('histAvg');
+    if(avgEl) avgEl.textContent = (totalL / data.itens.length).toFixed(1) + ' L';
+  }catch(e){
+    console.error('Erro ao carregar histórico:', e);
+    const list = document.getElementById('historyList');
+    if(list) list.innerHTML = '<div class="history-empty" style="color:var(--danger)">Erro ao carregar hist&oacute;rico.</div>';
+  }
 }
 
 function parseTariffInput(){
@@ -866,8 +890,11 @@ function updateTariffHelper(){
   let val = parseTariffInput();
   let costPerLiter = val / 1000.0;
   let cost30L = costPerLiter * 30.0;
-  document.getElementById('tariffHelper').innerHTML = 
-    `&#128176; Equivale a <strong>R$ ${costPerLiter.toFixed(4).replace('.',',')}</strong> por litro (ou <strong>~R$ ${cost30L.toFixed(2).replace('.',',')}</strong> por banho de 30L).`;
+  const helper = document.getElementById('tariffHelper');
+  if(helper){
+    helper.innerHTML = 
+      `&#128176; Equivale a <strong>R$ ${costPerLiter.toFixed(4).replace('.',',')}</strong> por litro (ou <strong>~R$ ${cost30L.toFixed(2).replace('.',',')}</strong> por banho de 30L).`;
+  }
 }
 
 async function fetchConfig(){
@@ -875,39 +902,54 @@ async function fetchConfig(){
     const cfg = await api('/api/config');
     let t = Number(cfg.tarifaM3 || 12.50).toFixed(2).replace('.', ',');
     let p = Number(cfg.pulsosL || 450).toFixed(1);
-    document.getElementById('cfgTariff').value = t;
-    document.getElementById('curPulsesDisplay').textContent = p + ' pulsos/L';
-    document.getElementById('cfgManualPulses').value = Math.round(Number(cfg.pulsosL || 450));
+    const tariffInp = document.getElementById('cfgTariff');
+    const pulsesDisp = document.getElementById('curPulsesDisplay');
+    const manualPulses = document.getElementById('cfgManualPulses');
+    if(tariffInp) tariffInp.value = t;
+    if(pulsesDisp) pulsesDisp.textContent = p + ' pulsos/L';
+    if(manualPulses) manualPulses.value = Math.round(Number(cfg.pulsosL || 450));
     updateTariffHelper();
     let comp = getActiveCompany();
     let nameEl = document.getElementById('cfgActiveCompName');
     if(nameEl && comp) nameEl.textContent = comp.name;
-  }catch(e){}
+  }catch(e){
+    console.error('Erro ao carregar configurações:', e);
+  }
 }
 
 async function saveTariff(){
-  let val = parseTariffInput();
-  await api(`/api/config?tariff=${val}`, {method:'POST'});
-  const msg = document.getElementById('tariffMsg');
-  msg.style.display = 'block';
-  setTimeout(()=>msg.style.display='none', 3000);
+  try{
+    let val = parseTariffInput();
+    await api(`/api/config?tariff=${val}`, {method:'POST'});
+    const msg = document.getElementById('tariffMsg');
+    if(msg){
+      msg.style.display = 'block';
+      setTimeout(()=>msg.style.display='none', 3000);
+    }
+  }catch(e){
+    console.error('Erro ao salvar tarifa:', e);
+    alert('Erro ao salvar tarifa.');
+  }
 }
 
 // CALIBRACAO
 function setCalibVol(ml){
-  document.getElementById('inpCalibVol').value = ml;
+  const inp = document.getElementById('inpCalibVol');
+  if(inp) inp.value = ml;
   updateCalibChipSelection();
 }
 
 function stepCalibVol(delta){
   const inp = document.getElementById('inpCalibVol');
+  if(!inp) return;
   let val = Math.max(100, Math.min(10000, (parseInt(inp.value)||500) + delta));
   inp.value = val;
   updateCalibChipSelection();
 }
 
 function updateCalibChipSelection(){
-  let val = parseInt(document.getElementById('inpCalibVol').value)||500;
+  const inp = document.getElementById('inpCalibVol');
+  let val = parseInt(inp ? inp.value : 500)||500;
   document.querySelectorAll('.calib-box .chip').forEach(c => {
     c.classList.toggle('active', parseInt(c.textContent) === val);
   });
@@ -915,7 +957,8 @@ function updateCalibChipSelection(){
 
 async function startCalibration(){
   try{
-    document.getElementById('calibResultCard').classList.remove('show');
+    const card = document.getElementById('calibResultCard');
+    if(card) card.classList.remove('show');
     await api('/api/calib/start', {method:'POST'});
     isCalibrating = true;
     document.getElementById('btnStartCalib').style.display = 'none';
@@ -927,10 +970,14 @@ async function startCalibration(){
     calibTimer = setInterval(async ()=>{
       try{
         const st = await api('/api/calib');
-        document.getElementById('calibPulsesCount').textContent = st.pulses || 0;
-      }catch(e){}
+        const countEl = document.getElementById('calibPulsesCount');
+        if(countEl) countEl.textContent = st.pulses || 0;
+      }catch(e){
+        console.error('Erro ao ler pulsos de calibração:', e);
+      }
     }, 500);
   }catch(e){
+    console.error('Erro ao iniciar calibração:', e);
     alert('Erro ao iniciar calibra\u00e7\u00e3o');
   }
 }
@@ -957,89 +1004,127 @@ async function stopCalibration(){
     let diffPct = ((calculatedFactor - 450.0) / 450.0) * 100.0;
     let diffStr = (diffPct >= 0 ? '+' : '') + diffPct.toFixed(1) + '%';
 
-    document.getElementById('calibResultDetails').innerHTML = `
-      Foram contados <strong>${pulses} pulsos</strong> para <strong>${ml} ml</strong> (${liters.toFixed(2)} L).<br>
-      Fator calculado: <strong style="color:var(--accent);font-size:16px">${calculatedFactor.toFixed(1)} pulsos/Litro</strong><br>
-      <span style="color:var(--muted);font-size:11px">Varia&ccedil;&atilde;o de ${diffStr} em rela&ccedil;&atilde;o ao padr&atilde;o de 450.0</span>
-    `;
-    document.getElementById('calibResultCard').classList.add('show');
+    const details = document.getElementById('calibResultDetails');
+    if(details){
+      details.innerHTML = `
+        Foram contados <strong>${pulses} pulsos</strong> para <strong>${ml} ml</strong> (${liters.toFixed(2)} L).<br>
+        Fator calculado: <strong style="color:var(--accent);font-size:16px">${calculatedFactor.toFixed(1)} pulsos/Litro</strong><br>
+        <span style="color:var(--muted);font-size:11px">Varia&ccedil;&atilde;o de ${diffStr} em rela&ccedil;&atilde;o ao padr&atilde;o de 450.0</span>
+      `;
+    }
+    const card = document.getElementById('calibResultCard');
+    if(card) card.classList.add('show');
   }catch(e){
+    console.error('Erro ao concluir calibração:', e);
     alert('Erro ao concluir calibra\u00e7\u00e3o');
   }
 }
 
 async function applyCalculatedCalib(){
-  await api(`/api/config?pulses=${calculatedFactor.toFixed(1)}`, {method:'POST'});
-  document.getElementById('curPulsesDisplay').textContent = calculatedFactor.toFixed(1) + ' pulsos/L';
-  document.getElementById('cfgManualPulses').value = Math.round(calculatedFactor);
-  document.getElementById('calibResultCard').classList.remove('show');
-  showCalibSuccess('Calibra&ccedil;&atilde;o aplicada com sucesso!');
+  try{
+    await api(`/api/config?pulses=${calculatedFactor.toFixed(1)}`, {method:'POST'});
+    document.getElementById('curPulsesDisplay').textContent = calculatedFactor.toFixed(1) + ' pulsos/L';
+    document.getElementById('cfgManualPulses').value = Math.round(calculatedFactor);
+    document.getElementById('calibResultCard').classList.remove('show');
+    showCalibSuccess('Calibra&ccedil;&atilde;o aplicada com sucesso!');
+  }catch(e){
+    console.error('Erro ao aplicar calibração:', e);
+    alert('Erro ao aplicar nova calibra\u00e7\u00e3o.');
+  }
 }
 
 async function saveManualPulses(){
-  let p = parseFloat(document.getElementById('cfgManualPulses').value);
-  if(isNaN(p) || p < 10) return;
-  await api(`/api/config?pulses=${p}`, {method:'POST'});
-  document.getElementById('curPulsesDisplay').textContent = p.toFixed(1) + ' pulsos/L';
-  showCalibSuccess('Calibra&ccedil;&atilde;o manual aplicada!');
+  try{
+    let p = parseFloat(document.getElementById('cfgManualPulses').value);
+    if(isNaN(p) || p < 10) return;
+    await api(`/api/config?pulses=${p}`, {method:'POST'});
+    document.getElementById('curPulsesDisplay').textContent = p.toFixed(1) + ' pulsos/L';
+    showCalibSuccess('Calibra&ccedil;&atilde;o manual aplicada!');
+  }catch(e){
+    console.error('Erro ao salvar calibração manual:', e);
+    alert('Erro ao salvar calibra\u00e7\u00e3o manual.');
+  }
 }
 
 async function resetFactoryCalib(){
-  await api('/api/calib/reset', {method:'POST'});
-  document.getElementById('curPulsesDisplay').textContent = '450.0 pulsos/L';
-  document.getElementById('cfgManualPulses').value = 450;
-  document.getElementById('calibResultCard').classList.remove('show');
-  showCalibSuccess('Padr&atilde;o de f&aacute;brica restaurado (450.0 pulsos/L)!');
+  try{
+    await api('/api/calib/reset', {method:'POST'});
+    document.getElementById('curPulsesDisplay').textContent = '450.0 pulsos/L';
+    document.getElementById('cfgManualPulses').value = 450;
+    document.getElementById('calibResultCard').classList.remove('show');
+    showCalibSuccess('Padr&atilde;o de f&aacute;brica restaurado (450.0 pulsos/L)!');
+  }catch(e){
+    console.error('Erro ao restaurar calibração padrão:', e);
+    alert('Erro ao restaurar padr\u00e3o de f\u00e1brica.');
+  }
 }
 
 function showCalibSuccess(text){
   const msg = document.getElementById('calibSuccessMsg');
+  if(!msg) return;
   msg.innerHTML = text;
   msg.style.display = 'block';
   setTimeout(()=>msg.style.display='none', 3000);
 }
 
+let polling = false;
+
 async function poll(){
+  if (polling) return;
+  polling = true;
   try{
     const s = await api('/api/status');
     const badge = document.getElementById('statusBadge');
-    badge.innerHTML = '&bull; Conectado';
-    badge.classList.remove('offline');
+    if(badge){
+      badge.innerHTML = '&bull; Conectado';
+      badge.classList.remove('offline');
+    }
 
     // Litros, Vazao, Tempo e Custo
-    document.getElementById('liveLiters').textContent = Number(s.liters).toFixed(1);
-    document.getElementById('liveFlow').innerHTML = Number(s.flow).toFixed(1) + ' <span style="font-size:11px;font-weight:normal">L/m</span>';
-    document.getElementById('liveTime').textContent = formatSec(s.seconds);
-    document.getElementById('liveCost').textContent = 'R$ ' + Number(s.cost).toFixed(2).replace('.',',');
+    const liveLiters = document.getElementById('liveLiters');
+    if(liveLiters) liveLiters.textContent = Number(s.liters).toFixed(1);
+    const liveFlow = document.getElementById('liveFlow');
+    if(liveFlow) liveFlow.innerHTML = Number(s.flow).toFixed(1) + ' <span style="font-size:11px;font-weight:normal">L/m</span>';
+    const liveTime = document.getElementById('liveTime');
+    if(liveTime) liveTime.textContent = formatSec(s.seconds);
+    const liveCost = document.getElementById('liveCost');
+    if(liveCost) liveCost.textContent = 'R$ ' + Number(s.cost).toFixed(2).replace('.',',');
 
     // Estados
     const pill = document.getElementById('statePill');
     isRunning = !!s.running;
     isPaused = (s.state === 'paused');
 
-    if(s.state === 'paused'){
-      pill.innerHTML = '&#129532; Modo Ensaboar';
-      pill.className = 'status-pill paused';
-    } else if(isRunning){
-      pill.innerHTML = '&#128167; Banho em Andamento';
-      pill.className = 'status-pill active';
-    } else if(s.state === 'finished'){
-      pill.innerHTML = '&#127937; Banho Finalizado';
-      pill.className = 'status-pill';
-    } else {
-      pill.textContent = 'Pronto';
-      pill.className = 'status-pill';
+    if(pill){
+      if(s.state === 'paused'){
+        pill.innerHTML = '&#129532; Modo Ensaboar';
+        pill.className = 'status-pill paused';
+      } else if(isRunning){
+        pill.innerHTML = '&#128167; Banho em Andamento';
+        pill.className = 'status-pill active';
+      } else if(s.state === 'finished'){
+        pill.innerHTML = '&#127937; Banho Finalizado';
+        pill.className = 'status-pill';
+      } else {
+        pill.textContent = 'Pronto';
+        pill.className = 'status-pill';
+      }
     }
 
     // Botoes
-    document.getElementById('btnStart').style.display = isRunning ? 'none' : 'flex';
-    document.getElementById('btnPause').style.display = isRunning ? 'flex' : 'none';
-    document.getElementById('btnStop').style.display = isRunning ? 'flex' : 'none';
+    const btnStart = document.getElementById('btnStart');
+    const btnPause = document.getElementById('btnPause');
+    const btnStop = document.getElementById('btnStop');
+    if(btnStart) btnStart.style.display = isRunning ? 'none' : 'flex';
+    if(btnPause) btnPause.style.display = isRunning ? 'flex' : 'none';
+    if(btnStop) btnStop.style.display = isRunning ? 'flex' : 'none';
 
-    if(isPaused){
-      document.getElementById('btnPause').innerHTML = '&#9654; RETOMAR BANHO';
-    } else {
-      document.getElementById('btnPause').innerHTML = '&#129532; MODO ENSABOAR';
+    if(btnPause){
+      if(isPaused){
+        btnPause.innerHTML = '&#9654; RETOMAR BANHO';
+      } else {
+        btnPause.innerHTML = '&#129532; MODO ENSABOAR';
+      }
     }
 
     // Barra de progresso
@@ -1051,23 +1136,32 @@ async function poll(){
     } else {
       pct = Math.min(100, (Number(s.liters) / 50) * 100);
     }
-    document.getElementById('liveProgress').style.width = pct + '%';
+    const prog = document.getElementById('liveProgress');
+    if(prog) prog.style.width = pct + '%';
 
     // Card de Resultado
     const resCard = document.getElementById('resultCard');
-    if(s.state === 'finished'){
-      resCard.classList.add('show');
-      document.getElementById('resScore').textContent = 'Nota ' + s.score;
-      document.getElementById('resText').innerHTML = 
-        `${Number(s.liters).toFixed(1)} Litros em ${formatSec(s.seconds)} &bull; Custo: R$ ${Number(s.cost).toFixed(2).replace('.',',')}`;
-    } else {
-      resCard.classList.remove('show');
+    if(resCard){
+      if(s.state === 'finished'){
+        resCard.classList.add('show');
+        const resScore = document.getElementById('resScore');
+        if(resScore) resScore.textContent = 'Nota ' + s.score;
+        const resText = document.getElementById('resText');
+        if(resText) resText.innerHTML = `${Number(s.liters).toFixed(1)} Litros em ${formatSec(s.seconds)} &bull; Custo: R$ ${Number(s.cost).toFixed(2).replace('.',',')}`;
+      } else {
+        resCard.classList.remove('show');
+      }
     }
 
   }catch(e){
+    console.error('Erro no poll status:', e);
     const badge = document.getElementById('statusBadge');
-    badge.innerHTML = '&bull; Sem resposta';
-    badge.classList.add('offline');
+    if(badge){
+      badge.innerHTML = '&bull; Sem resposta';
+      badge.classList.add('offline');
+    }
+  }finally{
+    polling = false;
   }
 }
 
@@ -1570,8 +1664,12 @@ function adminLogout(){
 
 checkAuth();
 
-setInterval(poll, 1000);
-poll();
+async function pollLoop(){
+  await poll();
+  setTimeout(pollLoop, 1500);
+}
+
+pollLoop();
 </script>
 </body>
 </html>
